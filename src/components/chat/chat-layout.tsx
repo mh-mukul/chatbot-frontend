@@ -38,6 +38,7 @@ const initialConversations: Conversation[] = [
 export function ChatLayout() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [activeChatMessages, setActiveChatMessages] = useState<Message[]>([]); // New state for active chat messages
   const { toast } = useToast();
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
@@ -46,6 +47,7 @@ export function ChatLayout() {
   const [chatHistory, setChatHistory] = useState<Chat[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [isLoadingChatMessages, setIsLoadingChatMessages] = useState(false); // New state for loading chat messages
 
   useEffect(() => {
     setIsClient(true);
@@ -180,11 +182,66 @@ export function ChatLayout() {
     router.push('/login');
   };
 
-  const handleSelectChat = (id: string) => {
-    setActiveConversationId(id);
-    // When selecting a chat from history, ensure its full messages are loaded if needed
-    // For now, we assume the `conversations` state already holds enough data
-  };
+  const handleSelectChat = useCallback(async (sessionId: string) => {
+    setActiveConversationId(sessionId);
+    setActiveChatMessages([]); // Clear previous messages
+
+    setIsLoadingChatMessages(true);
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const apiKey = process.env.NEXT_PUBLIC_API_KEY;
+
+      if (!baseUrl || !apiKey) {
+        console.error("API Base URL or API Key not configured in .env");
+        toast({
+          variant: "destructive",
+          title: "Configuration Error",
+          description: "API Base URL or API Key is missing.",
+        });
+        setIsLoadingChatMessages(false);
+        return;
+      }
+
+      const url = `${baseUrl}/api/v1/chat/${sessionId}`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': apiKey,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: { status: number; message: string; data: Chat[] } = await response.json();
+
+      if (data.status === 200 && data.data) {
+        const fetchedMessages: Message[] = data.data.map(chat => ({
+          id: chat.id.toString(),
+          role: chat.message.type === 'human' ? 'user' : 'assistant',
+          content: chat.message.content,
+        }));
+        setActiveChatMessages(fetchedMessages);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "API Error",
+          description: data.message || "Failed to fetch chat messages.",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching chat messages:", error);
+      toast({
+        variant: "destructive",
+        title: "Network Error",
+        description: "Could not connect to the backend.",
+      });
+    } finally {
+      setIsLoadingChatMessages(false);
+    }
+  }, [toast]);
 
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
@@ -319,10 +376,16 @@ export function ChatLayout() {
         />
       </Sidebar>
       <SidebarInset className="pt-16"> {/* Add padding-top to account for fixed header */}
-        <ChatThread
-          conversation={activeConversation}
-          onSendMessage={handleSendMessage}
-        />
+        {isLoadingChatMessages ? (
+          <div className="flex h-full items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+        ) : (
+          <ChatThread
+            conversation={activeConversationId ? { id: activeConversationId, title: activeConversation?.title || 'Chat', messages: activeChatMessages } : undefined}
+            onSendMessage={handleSendMessage}
+          />
+        )}
       </SidebarInset>
     </SidebarProvider>
   );
