@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { Loader2, User, LogOut } from 'lucide-react';
 import type { Conversation, Message } from './types';
 import { suggestFollowUpQuestions } from '@/ai/flows/suggest-follow-up-questions';
 import { summarizeConversation } from '@/ai/flows/summarize-conversation';
@@ -11,7 +11,16 @@ import {
   SidebarProvider,
   Sidebar,
   SidebarInset,
+  SidebarTrigger, // Import SidebarTrigger
 } from '@/components/ui/sidebar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { ChatSidebar } from './chat-sidebar';
 import { ChatThread } from './chat-thread';
 
@@ -51,10 +60,10 @@ export function ChatLayout() {
 
   useEffect(() => {
     if (isAuthenticated) {
+      // Load initial conversations if none exist (e.g., from local storage, not implemented yet)
+      // For now, always load initial conversations but start with a new chat
       setConversations(initialConversations);
-      if (initialConversations.length > 0) {
-        setActiveConversationId(initialConversations[0].id);
-      }
+      setActiveConversationId(null); // Start with a new chat
     }
   }, [isAuthenticated]);
 
@@ -62,6 +71,11 @@ export function ChatLayout() {
 
   const handleCreateNewChat = () => {
     setActiveConversationId(null);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('isLoggedIn');
+    router.push('/login');
   };
 
   const handleSelectChat = (id: string) => {
@@ -161,6 +175,29 @@ export function ChatLayout() {
 
   return (
     <SidebarProvider>
+      <header className="fixed top-0 left-0 right-0 z-10 p-4 bg-background/80 backdrop-blur-sm flex items-center justify-between w-full md:justify-end">
+        {/* Sidebar toggle for mobile */}
+        <div className="md:hidden">
+          <SidebarTrigger />
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="secondary" size="icon" className="rounded-full">
+              <User className="h-5 w-5" />
+              <span className="sr-only">User menu</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem className="p-0"> {/* Remove padding to prevent dot */}
+              <ThemeToggle />
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Logout</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </header>
       <Sidebar side="left" collapsible="icon">
         <ChatSidebar
           conversations={conversations}
@@ -169,7 +206,7 @@ export function ChatLayout() {
           onCreateNewChat={handleCreateNewChat}
         />
       </Sidebar>
-      <SidebarInset>
+      <SidebarInset className="pt-16"> {/* Add padding-top to account for fixed header */}
         <ChatThread
           conversation={activeConversation}
           onSendMessage={handleSendMessage}
