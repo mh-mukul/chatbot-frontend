@@ -20,7 +20,7 @@ import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
-  username: z.string().min(1, 'Username is required'),
+  employee_id: z.string().min(1, 'Employee ID is required'),
   password: z.string().min(1, 'Password is required'),
 });
 
@@ -45,20 +45,21 @@ export default function LoginPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: '',
+      employee_id: '',
       password: '',
     },
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    if (values.username === '1980' && values.password === 'admin') {
+    if (values.employee_id === '1980' && values.password === 'admin') {
       localStorage.setItem('isLoggedIn', 'true');
+      localStorage.setItem('employeeId', values.employee_id); // Store employee_id
       router.push('/');
     } else {
       toast({
         variant: 'destructive',
         title: 'Login Failed',
-        description: 'Invalid username or password.',
+        description: 'Invalid employee_id or password.',
       });
     }
   }
@@ -83,12 +84,12 @@ export default function LoginPage() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="username"
+                name="employee_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Username</FormLabel>
+                    <FormLabel>Employee ID</FormLabel>
                     <FormControl>
-                      <Input placeholder="Username" {...field} />
+                      <Input placeholder="Enter your Employee ID" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -101,7 +102,7 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="Password" {...field} />
+                      <Input type="password" placeholder="Enter your Password" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

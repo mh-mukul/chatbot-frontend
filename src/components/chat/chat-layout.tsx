@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, User, LogOut } from 'lucide-react';
-import type { Conversation, Message } from './types';
+import type { Conversation, Message, Chat, Pagination, ChatHistoryResponse } from './types';
 import { suggestFollowUpQuestions } from '@/ai/flows/suggest-follow-up-questions';
 import { summarizeConversation } from '@/ai/flows/summarize-conversation';
 import { useToast } from '@/hooks/use-toast';
@@ -11,7 +11,7 @@ import {
   SidebarProvider,
   Sidebar,
   SidebarInset,
-  SidebarTrigger, // Import SidebarTrigger
+  SidebarTrigger,
 } from '@/components/ui/sidebar';
 import {
   DropdownMenu,
@@ -42,6 +42,10 @@ export function ChatLayout() {
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [employeeId, setEmployeeId] = useState<string | null>(null);
+  const [chatHistory, setChatHistory] = useState<Chat[]>([]);
+  const [pagination, setPagination] = useState<Pagination | null>(null);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -50,22 +54,120 @@ export function ChatLayout() {
   useEffect(() => {
     if (isClient) {
       const isLoggedIn = localStorage.getItem('isLoggedIn');
-      if (isLoggedIn === 'true') {
+      const storedEmployeeId = localStorage.getItem('employeeId'); // Assuming employeeId is stored here
+      if (isLoggedIn === 'true' && storedEmployeeId) {
         setIsAuthenticated(true);
+        setEmployeeId(storedEmployeeId);
       } else {
         router.push('/login');
       }
     }
   }, [isClient, router]);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      // Load initial conversations if none exist (e.g., from local storage, not implemented yet)
-      // For now, always load initial conversations but start with a new chat
-      setConversations(initialConversations);
-      setActiveConversationId(null); // Start with a new chat
+  const fetchChatHistory = useCallback(async (page: number = 1) => {
+    if (!employeeId) return;
+
+    setIsLoadingHistory(true);
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const apiKey = process.env.NEXT_PUBLIC_API_KEY;
+
+      if (!baseUrl || !apiKey) {
+        console.error("API Base URL or API Key not configured in .env");
+        toast({
+          variant: "destructive",
+          title: "Configuration Error",
+          description: "API Base URL or API Key is missing.",
+        });
+        setIsLoadingHistory(false);
+        return;
+      }
+
+      const url = `${baseUrl}/api/v1/chat?user_id=${employeeId}&page=${page}`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': apiKey,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: ChatHistoryResponse = await response.json();
+
+      if (data.status === 200 && data.data) {
+        setChatHistory(prevHistory => [...prevHistory, ...data.data.chats]);
+        setPagination(data.data.pagination);
+
+        // Convert fetched chats to Conversation format for display in sidebar
+        const newConversations: Conversation[] = data.data.chats.map(chat => ({
+          id: chat.session_id, // Use session_id as conversation ID
+          title: chat.message.content, // Use the first message content as title
+          messages: [{
+            id: chat.id.toString(),
+            role: chat.message.type === 'human' ? 'user' : 'assistant',
+            content: chat.message.content,
+          }],
+        }));
+
+        setConversations(prevConversations => {
+          const existingSessionIds = new Set(prevConversations.map(conv => conv.id));
+          const uniqueNewConversations = newConversations.filter(conv => !existingSessionIds.has(conv.id));
+          
+          // Group messages by session_id to form conversations
+          const groupedChats = [...prevConversations];
+          uniqueNewConversations.forEach(newConv => {
+            const existingConvIndex = groupedChats.findIndex(gc => gc.id === newConv.id);
+            if (existingConvIndex > -1) {
+              // If conversation already exists, add message to it
+              groupedChats[existingConvIndex].messages.push(...newConv.messages);
+            } else {
+              // Otherwise, add new conversation
+              groupedChats.push(newConv);
+            }
+          });
+          
+          // Sort conversations by date_time of their latest message (most recent first)
+          groupedChats.sort((a, b) => {
+            const lastMessageA = a.messages[a.messages.length - 1];
+            const lastMessageB = b.messages[b.messages.length - 1];
+            // Assuming message ID can be used for sorting or add date_time to Message interface
+            // For now, using chat.date_time from the backend response for sorting
+            const chatA = data.data.chats.find(c => c.session_id === a.id);
+            const chatB = data.data.chats.find(c => c.session_id === b.id);
+            return new Date(chatB?.date_time || 0).getTime() - new Date(chatA?.date_time || 0).getTime();
+          });
+
+          return groupedChats;
+        });
+
+      } else {
+        toast({
+          variant: "destructive",
+          title: "API Error",
+          description: data.message || "Failed to fetch chat history.",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching chat history:", error);
+      toast({
+        variant: "destructive",
+        title: "Network Error",
+        description: "Could not connect to the backend.",
+      });
+    } finally {
+      setIsLoadingHistory(false);
     }
-  }, [isAuthenticated]);
+  }, [employeeId, toast]);
+
+  useEffect(() => {
+    if (isAuthenticated && employeeId) {
+      fetchChatHistory(1); // Fetch initial history on authentication
+    }
+  }, [isAuthenticated, employeeId, fetchChatHistory]);
 
   const activeConversation = conversations.find(c => c.id === activeConversationId);
 
@@ -80,6 +182,16 @@ export function ChatLayout() {
 
   const handleSelectChat = (id: string) => {
     setActiveConversationId(id);
+    // When selecting a chat from history, ensure its full messages are loaded if needed
+    // For now, we assume the `conversations` state already holds enough data
+  };
+
+  const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
+    if (scrollHeight - scrollTop === clientHeight && pagination?.next_page_url && !isLoadingHistory) {
+      const nextPage = (pagination.current_page || 0) + 1;
+      fetchChatHistory(nextPage);
+    }
   };
 
   const handleSendMessage = async (input: string) => {

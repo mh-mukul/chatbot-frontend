@@ -53,7 +53,9 @@ export function ChatSidebar({
                 className="w-full justify-start group-data-[collapsible=icon]:justify-center"
               >
                 <MessageSquare size={16} />
-                <span className="truncate group-data-[collapsible=icon]:hidden">{conv.title}</span>
+                <span className="truncate group-data-[collapsible=icon]:hidden">
+                  {conv.messages.length > 0 ? conv.messages[conv.messages.length - 1].content : 'New Chat'}
+                </span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
