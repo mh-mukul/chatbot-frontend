@@ -16,7 +16,7 @@ export function EmptyChat({ onSendMessage }: EmptyChatProps) {
             </p>
             </div>
             <div className="w-full max-w-2xl px-4 pb-4">
-            <ChatInput onSendMessage={onSendMessage} />
+            <ChatInput onSendMessage={onSendMessage} isSendingMessage={false}/>
             </div>
         </div>
     );
