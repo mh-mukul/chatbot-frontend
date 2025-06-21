@@ -14,11 +14,11 @@ export function ChatInput({ onSendMessage, isSendingMessage }: ChatInputProps) {
   const [input, setInput] = useState('');
   // Remove local isLoading state, use isSendingMessage from props
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isSendingMessage) return; // Use isSendingMessage from props
 
-    await onSendMessage(input);
+    onSendMessage(input);
     setInput('');
   };
 

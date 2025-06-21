@@ -4,7 +4,7 @@ import { EmptyChat } from './empty-chat';
 import { ChatMessage } from './chat-message';
 import { ChatInput } from './chat-input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 interface ChatThreadProps {
   conversation?: Conversation;
@@ -12,10 +12,9 @@ interface ChatThreadProps {
   isSendingMessage?: boolean; // Optional prop to indicate if a message is being sent
 }
 
-export function ChatThread({ conversation, onSendMessage }: ChatThreadProps) {
+export function ChatThread({ conversation, onSendMessage, isSendingMessage }: ChatThreadProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
-  const [isSendingMessage, setIsSendingMessage] = useState(false);
 
   useEffect(() => {
     if (viewportRef.current) {
@@ -27,13 +26,11 @@ export function ChatThread({ conversation, onSendMessage }: ChatThreadProps) {
   }, [conversation?.messages]);
 
   const handleSendMessage = async (input: string) => {
-    setIsSendingMessage(true);
     await onSendMessage(input);
-    setIsSendingMessage(false);
   };
 
   if (!conversation) {
-    return <EmptyChat onSendMessage={handleSendMessage}/>;
+    return <EmptyChat onSendMessage={handleSendMessage} />;
   }
 
   return (
@@ -46,7 +43,7 @@ export function ChatThread({ conversation, onSendMessage }: ChatThreadProps) {
         </div>
       </ScrollArea>
       <div className="border-t p-4 bg-background/80 backdrop-blur-sm">
-        <ChatInput onSendMessage={onSendMessage} isSendingMessage={isSendingMessage} />
+        <ChatInput onSendMessage={onSendMessage} isSendingMessage={isSendingMessage || false} />
       </div>
     </div>
   );
