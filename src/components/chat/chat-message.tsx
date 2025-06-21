@@ -17,7 +17,7 @@ export function ChatMessage({ message, onSendMessage }: ChatMessageProps) {
   return (
     <div
       className={cn(
-        'flex items-start gap-3',
+        'flex items-start gap-3 w-full',
         isAssistant ? 'justify-start' : 'justify-end'
       )}
     >
@@ -30,12 +30,26 @@ export function ChatMessage({ message, onSendMessage }: ChatMessageProps) {
       )}
 
       <div className={cn("flex flex-col gap-2 max-w-[80%]", isAssistant ? 'items-start' : 'items-end')}>
+        <div className={cn("flex flex-col")}>
+        {isAssistant ? (
+            <div className="flex items-center space-x-2">
+              <div className="text-left text-sm font-bold">Smart Buddy</div>
+              <div className="text-left text-xs text-muted-foreground">{new Date(message.createdAt).toLocaleDateString('en-US', {
+                month: '2-digit',
+                day: '2-digit',
+                year: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true,
+              }).replace(',', '')}</div>
+            </div>
+          ) : null}
         <Card
           className={cn(
-            'rounded-2xl p-4',
+            'rounded-2xl p-4 w-fit',
             isAssistant
-              ? 'bg-card rounded-bl-none'
-              : 'bg-primary text-primary-foreground rounded-br-none'
+              ? 'bg-transparent rounded-bl-none'
+              : 'bg-secondary text-secondary-foreground rounded-br-none'
           )}
         >
           <CardContent className="p-0 text-sm">
@@ -45,10 +59,11 @@ export function ChatMessage({ message, onSendMessage }: ChatMessageProps) {
                 <span>Thinking...</span>
               </div>
             ) : (
-              <p className="whitespace-pre-wrap">{message.content}</p>
+              <p className="whitespace-pre-wrap break-words">{message.content}</p>
             )}
           </CardContent>
         </Card>
+      </div>
         
         {!message.isGenerating && message.suggestedQuestions && message.suggestedQuestions.length > 0 && (
           <div className="flex flex-wrap gap-2 pt-2">
@@ -62,11 +77,7 @@ export function ChatMessage({ message, onSendMessage }: ChatMessageProps) {
       </div>
 
       {!isAssistant && (
-        <Avatar className="h-8 w-8 shrink-0">
-          <div className="bg-muted text-muted-foreground flex h-full w-full items-center justify-center rounded-full">
-            <User className="h-5 w-5" />
-          </div>
-        </Avatar>
+        null
       )}
     </div>
   );

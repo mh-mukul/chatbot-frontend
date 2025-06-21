@@ -31,7 +31,7 @@ export function ChatSidebar({
     <>
       <SidebarHeader className="h-14 flex flex-row items-center justify-between border-b p-2 group-data-[collapsible=icon]:justify-center">
         <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden">
-          <h1 className="text-lg font-semibold tracking-tighter">SmartBuddy</h1>
+          <h1 className="text-lg font-semibold tracking-tighter">Smart Buddy</h1>
         </div>
         <SidebarTrigger />
       </SidebarHeader>

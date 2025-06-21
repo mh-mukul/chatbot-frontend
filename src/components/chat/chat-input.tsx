@@ -36,7 +36,7 @@ export function ChatInput({ onSendMessage }: ChatInputProps) {
         value={input}
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Ask SmartBuddy anything..."
+        placeholder="Ask Smart Buddy anything..."
         className="min-h-[40px] pr-12 resize-none"
         rows={1}
         disabled={isLoading}

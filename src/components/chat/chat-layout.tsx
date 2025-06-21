@@ -24,16 +24,6 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { ChatSidebar } from './chat-sidebar';
 import { ChatThread } from './chat-thread';
 
-const initialConversations: Conversation[] = [
-  {
-    id: 'conv-1',
-    title: 'Getting started',
-    messages: [
-      { id: 'msg-1', role: 'user', content: 'What can you do?' },
-      { id: 'msg-2', role: 'assistant', content: 'I can help you with a variety of tasks! I am powered by Genkit and can leverage different AI models and tools. For this demo, I can summarize our conversation and suggest follow-up questions.' },
-    ],
-  },
-];
 
 export function ChatLayout() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -112,6 +102,7 @@ export function ChatLayout() {
             id: chat.id.toString(),
             role: chat.message.type === 'human' ? 'user' : 'assistant',
             content: chat.message.content,
+            createdAt: new Date(chat.date_time).getTime(),
           }],
           date_time: chat.date_time,
         }));
@@ -221,6 +212,7 @@ const groupedChats = [...prevConversations];
           id: chat.id.toString(),
           role: chat.message.type === 'human' ? 'user' : 'assistant',
           content: chat.message.content,
+          createdAt: new Date(chat.date_time).getTime(),
         }));
         setActiveChatMessages(fetchedMessages);
       } else {
@@ -266,8 +258,8 @@ const groupedChats = [...prevConversations];
       setConversations(newConversations);
     }
     
-    const userMessage: Message = { id: `msg-${crypto.randomUUID()}`, role: 'user', content: input };
-    const assistantMessage: Message = { id: `msg-${crypto.randomUUID()}`, role: 'assistant', content: '', isGenerating: true };
+    const userMessage: Message = { id: `msg-${crypto.randomUUID()}`, role: 'user', content: input, createdAt: Date.now() };
+    const assistantMessage: Message = { id: `msg-${crypto.randomUUID()}`, role: 'assistant', content: '', isGenerating: true, createdAt: Date.now() };
 
     const updatedConversations = newConversations.map(conv => {
       if (conv.id === currentConversationId) {

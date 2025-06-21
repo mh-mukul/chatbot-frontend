@@ -4,6 +4,7 @@ export interface Message {
   content: string;
   isGenerating?: boolean;
   suggestedQuestions?: string[];
+  createdAt: number;
 }
 
 export interface Conversation {
