@@ -6,11 +6,9 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarTrigger,
-  SidebarFooter,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import type { Conversation } from './types';
-import { ThemeToggle } from '@/components/theme-toggle';
 
 interface ChatSidebarProps {
   conversations: Conversation[];
@@ -37,14 +35,14 @@ export function ChatSidebar({
       </SidebarHeader>
       <SidebarContent onScroll={onScroll}>
         <div className="p-2">
-            <Button
-              variant="outline"
-              className="w-full justify-start gap-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:p-0"
-              onClick={onCreateNewChat}
-            >
-                <Plus size={16} />
-                <span className="group-data-[collapsible=icon]:hidden">New Chat</span>
-            </Button>
+          <Button
+            variant="outline"
+            className="w-full justify-start gap-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:p-0"
+            onClick={onCreateNewChat}
+          >
+            <Plus size={16} />
+            <span className="group-data-[collapsible=icon]:hidden">New Chat</span>
+          </Button>
         </div>
         <SidebarMenu className="px-2">
           {conversations.map((conv) => (
@@ -63,11 +61,6 @@ export function ChatSidebar({
           ))}
         </SidebarMenu>
       </SidebarContent>
-      {/* <SidebarFooter>
-        <SidebarMenu className="px-2">
-          <ThemeToggle />
-        </SidebarMenu>
-      </SidebarFooter> */}
     </>
   );
 }

@@ -110,27 +110,27 @@ export function ChatLayout() {
         setConversations(prevConversations => {
           const existingSessionIds = new Set(prevConversations.map(conv => conv.id));
           const uniqueNewConversations = newConversations.filter(conv => !existingSessionIds.has(conv.id));
-          
+
           // Group messages by session_id to form conversations
-const groupedChats = [...prevConversations];
-  uniqueNewConversations.forEach(newConv => {
-    const existingConvIndex = groupedChats.findIndex(gc => gc.id === newConv.id);
-    if (existingConvIndex > -1) {
-      // If conversation already exists, add message to it
-      groupedChats[existingConvIndex].messages.push(...newConv.messages);
-    } else {
-      // Otherwise, add new conversation
-      groupedChats.push(newConv);
-    }
-  });
-  
+          const groupedChats = [...prevConversations];
+          uniqueNewConversations.forEach(newConv => {
+            const existingConvIndex = groupedChats.findIndex(gc => gc.id === newConv.id);
+            if (existingConvIndex > -1) {
+              // If conversation already exists, add message to it
+              groupedChats[existingConvIndex].messages.push(...newConv.messages);
+            } else {
+              // Otherwise, add new conversation
+              groupedChats.push(newConv);
+            }
+          });
+
           // Sort conversations by date_time of their latest message (most recent first)
           groupedChats.sort((a, b) => {
             const lastMessageA = a.messages[a.messages.length - 1];
             const lastMessageB = b.messages[b.messages.length - 1];
             // Assuming message ID can be used for sorting or add date_time to Message interface
             // For now, using chat.date_time from the backend response for sorting
-             return new Date(b.date_time || 0).getTime() - new Date(a.date_time || 0).getTime();
+            return new Date(b.date_time || 0).getTime() - new Date(a.date_time || 0).getTime();
           });
 
           return groupedChats;
@@ -247,6 +247,18 @@ const groupedChats = [...prevConversations];
 
   const handleSendMessage = async (input: string) => {
     if (!employeeId || isSendingMessage) return;
+
+    // Generate a new session ID if there isn't one
+    let newSessionId = currentSessionId;
+    if (!newSessionId) {
+      newSessionId = Date.now().toString(); // Generate a unique session ID
+      setCurrentSessionId(newSessionId);
+    }
+
+    // If there is no active conversation, set it to the new session ID
+    if (!activeConversationId) {
+      setActiveConversationId(newSessionId);
+    }
 
     const userMessage: Message = {
       id: Date.now().toString() + '-user', // Unique ID for user message
@@ -373,9 +385,9 @@ const groupedChats = [...prevConversations];
 
   if (!isClient || !isAuthenticated) {
     return (
-        <div className="flex h-screen items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
     )
   }
 

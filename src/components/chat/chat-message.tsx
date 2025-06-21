@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 import type { Message } from './types';
 import { Avatar } from '@/components/ui/avatar';
-import {  Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Icons } from '../icons';
 import { Card, CardContent } from '../ui/card';
 
