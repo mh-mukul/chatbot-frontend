@@ -4,8 +4,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, User, LogOut } from 'lucide-react';
 import type { Conversation, Message, Chat, Pagination, ChatHistoryResponse } from './types';
-import { suggestFollowUpQuestions } from '@/ai/flows/suggest-follow-up-questions';
-import { summarizeConversation } from '@/ai/flows/summarize-conversation';
 import { useToast } from '@/hooks/use-toast';
 import {
   SidebarProvider,
@@ -246,83 +244,6 @@ const groupedChats = [...prevConversations];
     let currentConversationId = activeConversationId;
     let newConversations = [...conversations];
 
-    if (!currentConversationId) {
-      const newConversation: Conversation = {
-        id: `conv-${crypto.randomUUID()}`,
-        title: 'New Chat',
-        messages: [],
-      };
-      newConversations.unshift(newConversation);
-      currentConversationId = newConversation.id;
-      setActiveConversationId(currentConversationId);
-      setConversations(newConversations);
-    }
-    
-    const userMessage: Message = { id: `msg-${crypto.randomUUID()}`, role: 'user', content: input, createdAt: Date.now() };
-    const assistantMessage: Message = { id: `msg-${crypto.randomUUID()}`, role: 'assistant', content: '', isGenerating: true, createdAt: Date.now() };
-
-    const updatedConversations = newConversations.map(conv => {
-      if (conv.id === currentConversationId) {
-        return { ...conv, messages: [...conv.messages, userMessage, assistantMessage] };
-      }
-      return conv;
-    });
-    setConversations(updatedConversations);
-
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1500)); 
-      const aiResponseContent = `This is a simulated response to: "${input}". The real AI power comes from integrating flows like summarization and question suggestion.`;
-
-      const conversationHistory = updatedConversations
-        .find(c => c.id === currentConversationId)?.messages
-        .map(m => `${m.role}: ${m.content}`).join('\n') || '';
-
-      const suggestions = await suggestFollowUpQuestions({
-        conversationHistory,
-        currentResponse: aiResponseContent
-      });
-
-      const finalConversationsWithResponse = updatedConversations.map(conv => {
-        if (conv.id === currentConversationId) {
-          const updatedMessages = conv.messages.map(msg =>
-            msg.id === assistantMessage.id
-              ? { ...msg, content: aiResponseContent, isGenerating: false, suggestedQuestions: suggestions.followUpQuestions }
-              : msg
-          );
-          return { ...conv, messages: updatedMessages };
-        }
-        return conv;
-      });
-      setConversations(finalConversationsWithResponse);
-
-      const convForTitle = finalConversationsWithResponse.find(c => c.id === currentConversationId);
-      if (convForTitle && convForTitle.messages.length === 2) {
-        const fullHistory = convForTitle.messages.map(m => `${m.role}: ${m.content}`).join('\n');
-        const summary = await summarizeConversation({ conversationHistory: fullHistory });
-
-        const titleUpdatedConversations = finalConversationsWithResponse.map(conv => {
-            if (conv.id === currentConversationId) {
-                return { ...conv, title: summary.summary };
-            }
-            return conv;
-        });
-        setConversations(titleUpdatedConversations);
-      }
-    } catch (error) {
-      console.error("AI flow error:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "There was an error communicating with the AI.",
-      });
-      const errorStateConversations = updatedConversations.map(conv => {
-        if (conv.id === currentConversationId) {
-            return { ...conv, messages: conv.messages.filter(m => m.id !== assistantMessage.id) };
-        }
-        return conv;
-      });
-      setConversations(errorStateConversations);
-    }
   };
 
   if (!isClient || !isAuthenticated) {

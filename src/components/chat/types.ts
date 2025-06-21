@@ -3,7 +3,6 @@ export interface Message {
   role: 'user' | 'assistant';
   content: string;
   isGenerating?: boolean;
-  suggestedQuestions?: string[];
   createdAt: number;
 }
 
