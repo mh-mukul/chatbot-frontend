@@ -9,6 +9,7 @@ import { useEffect, useRef } from 'react';
 interface ChatThreadProps {
   conversation?: Conversation;
   onSendMessage: (input: string) => Promise<void>;
+  isSendingMessage?: boolean; // Optional prop to indicate if a message is being sent
 }
 
 export function ChatThread({ conversation, onSendMessage }: ChatThreadProps) {
@@ -34,7 +35,7 @@ export function ChatThread({ conversation, onSendMessage }: ChatThreadProps) {
         </div>
       </ScrollArea>
       <div className="border-t p-4 bg-background/80 backdrop-blur-sm">
-        <ChatInput onSendMessage={onSendMessage} />
+        <ChatInput onSendMessage={onSendMessage} isSendingMessage={false} />
       </div>
     </div>
   );

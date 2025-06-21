@@ -27,6 +27,8 @@ export function ChatLayout() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [activeChatMessages, setActiveChatMessages] = useState<Message[]>([]); // New state for active chat messages
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null); // State for current chat session ID
+  const [isSendingMessage, setIsSendingMessage] = useState(false); // State for message sending loading
   const { toast } = useToast();
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
@@ -163,6 +165,8 @@ const groupedChats = [...prevConversations];
 
   const handleCreateNewChat = () => {
     setActiveConversationId(null);
+    setCurrentSessionId(null); // Reset session ID for new chat
+    setActiveChatMessages([]); // Clear messages for new chat
   };
 
   const handleLogout = () => {
@@ -172,6 +176,7 @@ const groupedChats = [...prevConversations];
 
   const handleSelectChat = useCallback(async (sessionId: string) => {
     setActiveConversationId(sessionId);
+    setCurrentSessionId(sessionId); // Set current session ID when selecting a chat
     setActiveChatMessages([]); // Clear previous messages
 
     setIsLoadingChatMessages(true);
@@ -241,9 +246,129 @@ const groupedChats = [...prevConversations];
   };
 
   const handleSendMessage = async (input: string) => {
-    let currentConversationId = activeConversationId;
-    let newConversations = [...conversations];
+    if (!employeeId || isSendingMessage) return;
 
+    const userMessage: Message = {
+      id: Date.now().toString() + '-user', // Unique ID for user message
+      role: 'user',
+      content: input,
+      createdAt: Date.now(),
+    };
+
+    const assistantPlaceholder: Message = {
+      id: Date.now().toString() + '-assistant-placeholder', // Unique ID for placeholder
+      role: 'assistant',
+      content: '',
+      isGenerating: true,
+      createdAt: Date.now(),
+    };
+
+    setActiveChatMessages(prevMessages => [...prevMessages, userMessage, assistantPlaceholder]);
+    setIsSendingMessage(true);
+
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const apiKey = process.env.NEXT_PUBLIC_API_KEY;
+
+      if (!baseUrl || !apiKey) {
+        console.error("API Base URL or API Key not configured in .env");
+        toast({
+          variant: "destructive",
+          title: "Configuration Error",
+          description: "API Base URL or API Key is missing.",
+        });
+        setActiveChatMessages(prevMessages => prevMessages.filter(msg => msg.id !== assistantPlaceholder.id)); // Remove placeholder
+        return;
+      }
+
+      const requestBody: { user_id: string; query: string; session_id?: string } = {
+        user_id: employeeId,
+        query: input,
+      };
+
+      if (currentSessionId) {
+        requestBody.session_id = currentSessionId;
+      }
+
+      const response = await fetch(`${baseUrl}/api/v1/chat`, {
+        method: 'POST',
+        headers: {
+          'Authorization': apiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: { status: number; message: string; data: { session_id: string; user_id: number; response: string; duration: number } } = await response.json();
+
+      if (data.status === 200 && data.data) {
+        const newSessionId = data.data.session_id;
+        const assistantResponseContent = data.data.response;
+
+        setCurrentSessionId(newSessionId);
+
+        setActiveChatMessages(prevMessages => prevMessages.map(msg =>
+          msg.id === assistantPlaceholder.id
+            ? { ...msg, content: assistantResponseContent, isGenerating: false, createdAt: Date.now() }
+            : msg
+        ));
+
+        // Update conversations for sidebar
+        setConversations(prevConversations => {
+          const existingConversationIndex = prevConversations.findIndex(conv => conv.id === newSessionId);
+          const newAssistantMessage: Message = {
+            id: Date.now().toString() + '-assistant',
+            role: 'assistant',
+            content: assistantResponseContent,
+            createdAt: Date.now(),
+          };
+
+          if (existingConversationIndex > -1) {
+            // Update existing conversation
+            const updatedConversations = [...prevConversations];
+            updatedConversations[existingConversationIndex].messages.push(userMessage, newAssistantMessage);
+            updatedConversations[existingConversationIndex].date_time = new Date().toISOString(); // Update last activity
+            return updatedConversations;
+          } else {
+            // Create new conversation
+            const newConversation: Conversation = {
+              id: newSessionId,
+              title: input.substring(0, 50) + (input.length > 50 ? '...' : ''), // Use first part of user query as title
+              messages: [userMessage, newAssistantMessage],
+              date_time: new Date().toISOString(),
+            };
+            return [newConversation, ...prevConversations]; // Add new conversation to the top
+          }
+        });
+
+        // If it's a new conversation, set it as active
+        if (!activeConversationId) {
+          setActiveConversationId(newSessionId);
+        }
+
+      } else {
+        toast({
+          variant: "destructive",
+          title: "API Error",
+          description: data.message || "Failed to get chat response.",
+        });
+        setActiveChatMessages(prevMessages => prevMessages.filter(msg => msg.id !== assistantPlaceholder.id)); // Remove placeholder
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      toast({
+        variant: "destructive",
+        title: "Network Error",
+        description: "Could not connect to the backend or an unexpected error occurred.",
+      });
+      setActiveChatMessages(prevMessages => prevMessages.filter(msg => msg.id !== assistantPlaceholder.id)); // Remove placeholder
+    } finally {
+      setIsSendingMessage(false);
+    }
   };
 
   if (!isClient || !isAuthenticated) {
@@ -297,6 +422,7 @@ const groupedChats = [...prevConversations];
           <ChatThread
             conversation={activeConversationId ? { id: activeConversationId, title: activeConversation?.title || 'Chat', messages: activeChatMessages } : undefined}
             onSendMessage={handleSendMessage}
+            isSendingMessage={isSendingMessage} // Pass loading state to ChatThread
           />
         )}
       </SidebarInset>

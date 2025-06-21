@@ -7,20 +7,19 @@ import { Send } from 'lucide-react';
 
 interface ChatInputProps {
   onSendMessage: (input: string) => Promise<void>;
+  isSendingMessage: boolean; // New prop to indicate if a message is being sent
 }
 
-export function ChatInput({ onSendMessage }: ChatInputProps) {
+export function ChatInput({ onSendMessage, isSendingMessage }: ChatInputProps) {
   const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  // Remove local isLoading state, use isSendingMessage from props
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() || isSendingMessage) return; // Use isSendingMessage from props
 
-    setIsLoading(true);
     await onSendMessage(input);
     setInput('');
-    setIsLoading(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -39,13 +38,13 @@ export function ChatInput({ onSendMessage }: ChatInputProps) {
         placeholder="Ask Smart Buddy anything..."
         className="min-h-[40px] pr-12 resize-none"
         rows={1}
-        disabled={isLoading}
+        disabled={isSendingMessage} // Use isSendingMessage from props
       />
       <Button
         type="submit"
         size="icon"
         className="absolute bottom-[5px] right-[5px] h-8 w-8 shrink-0"
-        disabled={isLoading || !input.trim()}
+        disabled={isSendingMessage || !input.trim()} // Use isSendingMessage from props
       >
         <Send size={16} />
         <span className="sr-only">Send message</span>
