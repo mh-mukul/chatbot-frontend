@@ -17,6 +17,7 @@ interface ChatSidebarProps {
   activeConversationId: string | null;
   onSelectChat: (id: string) => void;
   onCreateNewChat: () => void;
+  onScroll: (event: React.UIEvent<HTMLDivElement>) => void;
 }
 
 export function ChatSidebar({
@@ -24,6 +25,7 @@ export function ChatSidebar({
   activeConversationId,
   onSelectChat,
   onCreateNewChat,
+  onScroll,
 }: ChatSidebarProps) {
   return (
     <>
@@ -33,7 +35,7 @@ export function ChatSidebar({
         </div>
         <SidebarTrigger />
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent onScroll={onScroll}>
         <div className="p-2">
             <Button
               variant="outline"

@@ -113,6 +113,7 @@ export function ChatLayout() {
             role: chat.message.type === 'human' ? 'user' : 'assistant',
             content: chat.message.content,
           }],
+          date_time: chat.date_time,
         }));
 
         setConversations(prevConversations => {
@@ -120,27 +121,25 @@ export function ChatLayout() {
           const uniqueNewConversations = newConversations.filter(conv => !existingSessionIds.has(conv.id));
           
           // Group messages by session_id to form conversations
-          const groupedChats = [...prevConversations];
-          uniqueNewConversations.forEach(newConv => {
-            const existingConvIndex = groupedChats.findIndex(gc => gc.id === newConv.id);
-            if (existingConvIndex > -1) {
-              // If conversation already exists, add message to it
-              groupedChats[existingConvIndex].messages.push(...newConv.messages);
-            } else {
-              // Otherwise, add new conversation
-              groupedChats.push(newConv);
-            }
-          });
-          
+const groupedChats = [...prevConversations];
+  uniqueNewConversations.forEach(newConv => {
+    const existingConvIndex = groupedChats.findIndex(gc => gc.id === newConv.id);
+    if (existingConvIndex > -1) {
+      // If conversation already exists, add message to it
+      groupedChats[existingConvIndex].messages.push(...newConv.messages);
+    } else {
+      // Otherwise, add new conversation
+      groupedChats.push(newConv);
+    }
+  });
+  
           // Sort conversations by date_time of their latest message (most recent first)
           groupedChats.sort((a, b) => {
             const lastMessageA = a.messages[a.messages.length - 1];
             const lastMessageB = b.messages[b.messages.length - 1];
             // Assuming message ID can be used for sorting or add date_time to Message interface
             // For now, using chat.date_time from the backend response for sorting
-            const chatA = data.data.chats.find(c => c.session_id === a.id);
-            const chatB = data.data.chats.find(c => c.session_id === b.id);
-            return new Date(chatB?.date_time || 0).getTime() - new Date(chatA?.date_time || 0).getTime();
+             return new Date(b.date_time || 0).getTime() - new Date(a.date_time || 0).getTime();
           });
 
           return groupedChats;
@@ -373,6 +372,7 @@ export function ChatLayout() {
           activeConversationId={activeConversationId}
           onSelectChat={handleSelectChat}
           onCreateNewChat={handleCreateNewChat}
+          onScroll={handleScroll}
         />
       </Sidebar>
       <SidebarInset className="pt-16"> {/* Add padding-top to account for fixed header */}

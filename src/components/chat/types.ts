@@ -10,6 +10,7 @@ export interface Conversation {
   id: string;
   title: string;
   messages: Message[];
+  date_time?: string;
 }
 
 export interface ChatMessageContent {
