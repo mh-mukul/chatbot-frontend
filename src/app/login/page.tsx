@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import { login } from '@/api/login';
 
 const formSchema = z.object({
   employee_id: z.string().min(1, 'Employee ID is required'),
@@ -50,8 +51,9 @@ export default function LoginPage() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    if (values.employee_id === '1980' && values.password === 'admin') {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    const success = await login(values.employee_id, values.password);
+    if (success) {
       localStorage.setItem('isLoggedIn', 'true');
       localStorage.setItem('employeeId', values.employee_id); // Store employee_id
       router.push('/');

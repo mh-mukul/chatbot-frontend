@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, User, LogOut } from 'lucide-react';
-import type { Conversation, Message, Chat, Pagination, ChatHistoryResponse } from './types';
+import type { Conversation, Message, Chat, Pagination } from './types';
 import { useToast } from '@/hooks/use-toast';
 import {
   SidebarProvider,
@@ -22,6 +22,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { ChatSidebar } from './chat-sidebar';
 import { ChatThread } from './chat-thread';
 import { ChatInput } from './chat-input';
+import { fetchChatHistory, fetchChatMessages, sendMessage } from '@/api/chat';
 
 
 export function ChatLayout() {
@@ -57,46 +58,19 @@ export function ChatLayout() {
     }
   }, [isClient, router]);
 
-  const fetchChatHistory = useCallback(async (page: number = 1) => {
+  const fetchChatHistoryHandler = useCallback(async (page: number = 1) => {
     if (!employeeId) return;
 
     setIsLoadingHistory(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-      const apiKey = process.env.NEXT_PUBLIC_API_KEY;
-
-      if (!baseUrl || !apiKey) {
-        console.error("API Base URL or API Key not configured in .env");
-        toast({
-          variant: "destructive",
-          title: "Configuration Error",
-          description: "API Base URL or API Key is missing.",
-        });
-        setIsLoadingHistory(false);
-        return;
-      }
-
-      const url = `${baseUrl}/api/v1/chat?user_id=${employeeId}&page=${page}`;
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Authorization': apiKey,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data: ChatHistoryResponse = await response.json();
+      const data = await fetchChatHistory(employeeId || '', page);
 
       if (data.status === 200 && data.data) {
         setChatHistory(prevHistory => [...prevHistory, ...data.data.chats]);
         setPagination(data.data.pagination);
 
         // Convert fetched chats to Conversation format for display in sidebar
-        const newConversations: Conversation[] = data.data.chats.map(chat => ({
+        const newConversations: Conversation[] = data.data.chats.map((chat: Chat) => ({
           id: chat.session_id, // Use session_id as conversation ID
           title: chat.message.content, // Use the first message content as title
           messages: [{
@@ -158,9 +132,9 @@ export function ChatLayout() {
 
   useEffect(() => {
     if (isAuthenticated && employeeId) {
-      fetchChatHistory(1); // Fetch initial history on authentication
+      fetchChatHistoryHandler(1); // Fetch initial history on authentication
     }
-  }, [isAuthenticated, employeeId, fetchChatHistory]);
+  }, [isAuthenticated, employeeId, fetchChatHistoryHandler]);
 
   const activeConversation = conversations.find(c => c.id === activeConversationId);
 
@@ -182,37 +156,10 @@ export function ChatLayout() {
 
     setIsLoadingChatMessages(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-      const apiKey = process.env.NEXT_PUBLIC_API_KEY;
-
-      if (!baseUrl || !apiKey) {
-        console.error("API Base URL or API Key not configured in .env");
-        toast({
-          variant: "destructive",
-          title: "Configuration Error",
-          description: "API Base URL or API Key is missing.",
-        });
-        setIsLoadingChatMessages(false);
-        return;
-      }
-
-      const url = `${baseUrl}/api/v1/chat/${sessionId}`;
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Authorization': apiKey,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data: { status: number; message: string; data: Chat[] } = await response.json();
+      const data = await fetchChatMessages(sessionId);
 
       if (data.status === 200 && data.data) {
-        const fetchedMessages: Message[] = data.data.map(chat => ({
+        const fetchedMessages: Message[] = data.data.map((chat: Chat) => ({
           id: chat.id.toString(),
           role: chat.message.type === 'human' ? 'user' : 'assistant',
           content: chat.message.content,
@@ -242,7 +189,7 @@ export function ChatLayout() {
     const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
     if (scrollHeight - scrollTop === clientHeight && pagination?.next_page_url && !isLoadingHistory) {
       const nextPage = (pagination.current_page || 0) + 1;
-      fetchChatHistory(nextPage);
+      fetchChatHistoryHandler(nextPage);
     }
   };
 
@@ -280,43 +227,7 @@ export function ChatLayout() {
     setIsSendingMessage(true);
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-      const apiKey = process.env.NEXT_PUBLIC_API_KEY;
-
-      if (!baseUrl || !apiKey) {
-        console.error("API Base URL or API Key not configured in .env");
-        toast({
-          variant: "destructive",
-          title: "Configuration Error",
-          description: "API Base URL or API Key is missing.",
-        });
-        setActiveChatMessages(prevMessages => prevMessages.filter(msg => msg.id !== assistantPlaceholder.id)); // Remove placeholder
-        return;
-      }
-
-      const requestBody: { user_id: string; query: string; session_id?: string } = {
-        user_id: employeeId,
-        query: input,
-      };
-
-      if (currentSessionId) {
-        requestBody.session_id = currentSessionId;
-      }
-
-      const response = await fetch(`${baseUrl}/api/v1/chat`, {
-        method: 'POST',
-        headers: {
-          'Authorization': apiKey,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data: { status: number; message: string; data: { session_id: string; user_id: number; response: string; duration: number } } = await response.json();
+      const data = await sendMessage(employeeId, input, currentSessionId || undefined);
 
       if (data.status === 200 && data.data) {
         const newSessionId = data.data.session_id;
