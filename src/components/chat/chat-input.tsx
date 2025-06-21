@@ -30,13 +30,13 @@ export function ChatInput({ onSendMessage, isSendingMessage }: ChatInputProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="relative flex items-end gap-2">
+    <form onSubmit={handleSubmit} className="relative flex items-end gap-2 w-full">
       <Textarea
         value={input}
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="Ask Smart Buddy anything..."
-        className="min-h-[40px] pr-12 resize-none"
+        className="min-h-[40px] pr-12 resize-none w-full"
         rows={1}
         disabled={isSendingMessage} // Use isSendingMessage from props
       />

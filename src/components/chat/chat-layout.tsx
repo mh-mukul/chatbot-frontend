@@ -232,7 +232,7 @@ export function ChatLayout() {
         variant: "destructive",
         title: "Network Error",
         description: "Could not connect to the backend.",
-        });
+      });
     } finally {
       setIsLoadingChatMessages(false);
     }
@@ -439,9 +439,9 @@ export function ChatLayout() {
               isSendingMessage={isSendingMessage}
             />
           ) : (
-            <div className="flex flex-col h-full">
-              <div className="flex-1 flex items-center justify-center">
-                <div className="flex flex-col items-center justify-center text-center p-6 max-w-md mx-auto">
+            <div className="flex h-full items-center justify-center">
+              <div className="flex flex-col items-center w-full">
+                <div className="flex flex-col items-center justify-center text-center max-w-md  p-6">
                   <h1 className="text-3xl font-semibold text-foreground">
                     Where should we begin?
                   </h1>
@@ -449,9 +449,9 @@ export function ChatLayout() {
                     I can help you with a variety of tasks. Start a conversation below.
                   </p>
                 </div>
-              </div>
-              <div className="border-t p-4 bg-background/80 backdrop-blur-sm">
-                <ChatInput onSendMessage={handleSendMessage} isSendingMessage={isSendingMessage} />
+                <div className="max-w-[70%] w-full p-4">
+                  <ChatInput onSendMessage={handleSendMessage} isSendingMessage={isSendingMessage} />
+                </div>
               </div>
             </div>
           )
