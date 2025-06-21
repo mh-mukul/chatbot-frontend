@@ -14,35 +14,39 @@ interface ChatThreadProps {
 
 export function ChatThread({ conversation, onSendMessage }: ChatThreadProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const [isFirstMessageSending, setIsFirstMessageSending] = useState(false);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
 
   useEffect(() => {
-    if (scrollAreaRef.current) {
-        scrollAreaRef.current.parentElement?.scrollTo({ top: scrollAreaRef.current.scrollHeight, behavior: 'smooth' });
+    if (viewportRef.current) {
+      viewportRef.current.scrollTo({
+        top: viewportRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
     }
   }, [conversation?.messages]);
 
   const handleSendMessage = async (input: string) => {
-    setIsFirstMessageSending(true);
+    setIsSendingMessage(true);
     await onSendMessage(input);
-    setIsFirstMessageSending(false);
+    setIsSendingMessage(false);
   };
 
   if (!conversation) {
-    return <EmptyChat onSendMessage={handleSendMessage} isSendingMessage={isFirstMessageSending} />;
+    return <EmptyChat onSendMessage={handleSendMessage}/>;
   }
 
   return (
     <div className="flex flex-col h-full">
-      <ScrollArea className="flex-1">
-        <div className="p-4 md:p-6 space-y-6" ref={scrollAreaRef}>
+      <ScrollArea className="flex-1" ref={scrollAreaRef} viewportRef={viewportRef}>
+        <div className="p-4 md:p-6 space-y-6">
           {conversation.messages.map((message) => (
             <ChatMessage key={message.id} message={message} onSendMessage={onSendMessage} />
           ))}
         </div>
       </ScrollArea>
       <div className="border-t p-4 bg-background/80 backdrop-blur-sm">
-        <ChatInput onSendMessage={onSendMessage} isSendingMessage={isFirstMessageSending} />
+        <ChatInput onSendMessage={onSendMessage} isSendingMessage={isSendingMessage} />
       </div>
     </div>
   );

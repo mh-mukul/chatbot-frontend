@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { ChatSidebar } from './chat-sidebar';
 import { ChatThread } from './chat-thread';
+import { ChatInput } from './chat-input';
 
 
 export function ChatLayout() {
@@ -231,7 +232,7 @@ export function ChatLayout() {
         variant: "destructive",
         title: "Network Error",
         description: "Could not connect to the backend.",
-      });
+        });
     } finally {
       setIsLoadingChatMessages(false);
     }
@@ -431,11 +432,29 @@ export function ChatLayout() {
             <Loader2 className="h-8 w-8 animate-spin" />
           </div>
         ) : (
-          <ChatThread
-            conversation={activeConversationId ? { id: activeConversationId, title: activeConversation?.title || 'Chat', messages: activeChatMessages } : undefined}
-            onSendMessage={handleSendMessage}
-            isSendingMessage={isSendingMessage} // Pass loading state to ChatThread
-          />
+          activeConversationId ? (
+            <ChatThread
+              conversation={{ id: activeConversationId, title: activeConversation?.title || 'Chat', messages: activeChatMessages }}
+              onSendMessage={handleSendMessage}
+              isSendingMessage={isSendingMessage}
+            />
+          ) : (
+            <div className="flex flex-col h-full">
+              <div className="flex-1 flex items-center justify-center">
+                <div className="flex flex-col items-center justify-center text-center p-6 max-w-md mx-auto">
+                  <h1 className="text-3xl font-semibold text-foreground">
+                    Where should we begin?
+                  </h1>
+                  <p className="mt-2 text-muted-foreground">
+                    I can help you with a variety of tasks. Start a conversation below.
+                  </p>
+                </div>
+              </div>
+              <div className="border-t p-4 bg-background/80 backdrop-blur-sm">
+                <ChatInput onSendMessage={handleSendMessage} isSendingMessage={isSendingMessage} />
+              </div>
+            </div>
+          )
         )}
       </SidebarInset>
     </SidebarProvider>
