@@ -64,7 +64,7 @@ export function ChatLayout() {
 
     setIsLoadingHistory(true);
     try {
-            const data = await fetchChatHistory(employeeId || '', page, isMobileRef.current ? 20 : 30);
+      const data = await fetchChatHistory(employeeId || '', page, isMobileRef.current ? 20 : 30);
 
       if (data.status === 200 && data.data) {
         setChatHistory(prevHistory => [...prevHistory, ...data.data.chats]);
@@ -131,7 +131,7 @@ export function ChatLayout() {
     }
   }, [employeeId, toast]);
 
-      const isMobile = useIsMobile();
+  const isMobile = useIsMobile();
   const isMobileRef = useRef(isMobile);
 
   useEffect(() => {

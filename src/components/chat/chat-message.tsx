@@ -1,3 +1,5 @@
+"use client";
+
 import { cn } from '@/lib/utils';
 import type { Message } from './types';
 import { Avatar } from '@/components/ui/avatar';
