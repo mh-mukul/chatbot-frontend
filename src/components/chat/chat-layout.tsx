@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, User, LogOut } from 'lucide-react';
 import type { Conversation, Message, Chat, Pagination } from './types';
@@ -23,6 +23,7 @@ import { ChatSidebar } from './chat-sidebar';
 import { ChatThread } from './chat-thread';
 import { ChatInput } from './chat-input';
 import { fetchChatHistory, fetchChatMessages, sendMessage } from '@/api/chat';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 
 export function ChatLayout() {
@@ -63,7 +64,7 @@ export function ChatLayout() {
 
     setIsLoadingHistory(true);
     try {
-      const data = await fetchChatHistory(employeeId || '', page);
+            const data = await fetchChatHistory(employeeId || '', page, isMobileRef.current ? 20 : 30);
 
       if (data.status === 200 && data.data) {
         setChatHistory(prevHistory => [...prevHistory, ...data.data.chats]);
@@ -129,6 +130,13 @@ export function ChatLayout() {
       setIsLoadingHistory(false);
     }
   }, [employeeId, toast]);
+
+      const isMobile = useIsMobile();
+  const isMobileRef = useRef(isMobile);
+
+  useEffect(() => {
+    isMobileRef.current = isMobile;
+  }, [isMobile]);
 
   useEffect(() => {
     if (isAuthenticated && employeeId) {

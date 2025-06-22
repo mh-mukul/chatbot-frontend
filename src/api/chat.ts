@@ -6,8 +6,8 @@ if (!baseUrl || !apiKey) {
   throw new Error("API Base URL or API Key not configured in .env");
 }
 
-export async function fetchChatHistory(userId: string, page: number = 1) {
-  const url = `${baseUrl}/api/v1/chat?user_id=${userId}&page=${page}`;
+export async function fetchChatHistory(userId: string, page: number = 1, limit: number = 50) {
+  const url = `${baseUrl}/api/v1/chat?user_id=${userId}&page=${page}&limit=${limit}`;
   const response = await fetch(url, {
     method: 'GET',
     headers: {
