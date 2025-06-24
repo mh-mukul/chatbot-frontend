@@ -23,6 +23,23 @@ export async function fetchChatHistory(userId: string, page: number = 1, limit: 
   return await response.json();
 }
 
+export async function deleteChat(sessionId: string) {
+  const url = `${baseUrl}/api/v1/chat/${sessionId}`;
+  const response = await fetch(url, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': apiKey || '',
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  return await response.json();
+}
+
 export async function fetchChatMessages(sessionId: string) {
   const url = `${baseUrl}/api/v1/chat/${sessionId}`;
   const response = await fetch(url, {

@@ -17,12 +17,22 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { ChatSidebar } from './chat-sidebar';
 import { ChatThread } from './chat-thread';
 import { ChatInput } from './chat-input';
-import { fetchChatHistory, fetchChatMessages, sendMessage } from '@/api/chat';
+import { fetchChatHistory, fetchChatMessages, sendMessage, deleteChat } from '@/api/chat';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 
@@ -41,6 +51,8 @@ export function ChatLayout() {
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isLoadingChatMessages, setIsLoadingChatMessages] = useState(false); // New state for loading chat messages
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [chatToDeleteId, setChatToDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     setIsClient(true);
@@ -156,6 +168,39 @@ export function ChatLayout() {
     localStorage.removeItem('isLoggedIn');
     router.push('/login');
   };
+
+  const handleDeleteChat = useCallback((sessionId: string) => {
+    setChatToDeleteId(sessionId);
+    setIsDeleteDialogOpen(true);
+  }, []);
+
+  const confirmDeleteChat = useCallback(async () => {
+    if (!chatToDeleteId) return;
+
+    try {
+      await deleteChat(chatToDeleteId);
+      setConversations(prevConversations => prevConversations.filter(conv => conv.id !== chatToDeleteId));
+      if (activeConversationId === chatToDeleteId) {
+        setActiveConversationId(null);
+        setActiveChatMessages([]);
+        setCurrentSessionId(null);
+      }
+      toast({
+        title: "Chat Deleted",
+        description: "The chat has been successfully deleted.",
+      });
+    } catch (error) {
+      console.error("Error deleting chat:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete chat.",
+      });
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setChatToDeleteId(null);
+    }
+  }, [chatToDeleteId, activeConversationId, toast]);
 
   const handleSelectChat = useCallback(async (sessionId: string) => {
     setActiveConversationId(sessionId);
@@ -343,6 +388,7 @@ export function ChatLayout() {
           onSelectChat={handleSelectChat}
           onCreateNewChat={handleCreateNewChat}
           onScroll={handleScroll}
+          onDeleteChat={handleDeleteChat}
         />
       </Sidebar>
       <SidebarInset className="pt-16"> {/* Add padding-top to account for fixed header */}
@@ -376,6 +422,22 @@ export function ChatLayout() {
           )
         )}
       </SidebarInset>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your chat session
+              and remove your data from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteChat} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </SidebarProvider>
   );
 }
