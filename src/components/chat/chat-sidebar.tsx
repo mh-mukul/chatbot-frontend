@@ -1,6 +1,7 @@
 "use client";
 
 import { Plus, MessageSquare, MoreHorizontal, Trash } from 'lucide-react';
+import { useState } from 'react';
 import {
   SidebarHeader,
   SidebarContent,
@@ -35,6 +36,8 @@ export function ChatSidebar({
   onScroll,
   onDeleteChat,
 }: ChatSidebarProps) {
+  const [hoveredChatId, setHoveredChatId] = useState<string | null>(null);
+
   return (
     <>
       <SidebarHeader className="h-14 flex flex-row items-center justify-between border-b p-2 group-data-[collapsible=icon]:justify-center">
@@ -56,11 +59,15 @@ export function ChatSidebar({
         </div>
         <SidebarMenu className="px-2">
           {conversations.map((conv) => (
-            <SidebarMenuItem key={conv.id}> {/* Removed group class from here */}
+            <SidebarMenuItem
+              key={conv.id}
+              onMouseEnter={() => setHoveredChatId(conv.id)}
+              onMouseLeave={() => setHoveredChatId(null)}
+            >
               <SidebarMenuButton
                 onClick={() => onSelectChat(conv.id)}
                 isActive={conv.id === activeConversationId}
-                className="w-full justify-start group-data-[collapsible=icon]:justify-center relative pr-10 group" // Added group class here
+                className="w-full justify-start group-data-[collapsible=icon]:justify-center relative pr-10"
               >
                 <MessageSquare size={16} />
                 <span className="truncate group-data-[collapsible=icon]:hidden">
@@ -68,19 +75,20 @@ export function ChatSidebar({
                 </span>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    {/* Changed Button to div to fix nested button error */}
                     <div
-                      className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 group-data-[collapsible=icon]:hidden flex items-center justify-center rounded-md p-1.5 cursor-pointer hover:bg-accent hover:text-accent-foreground"
-                      onClick={(e) => e.stopPropagation()} // Prevent selecting chat when clicking options
+                      className={`absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center rounded-md p-1.5 cursor-pointer hover:bg-accent hover:text-accent-foreground ${
+                        hoveredChatId === conv.id ? 'opacity-100' : 'opacity-0'
+                      }`}
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <MoreHorizontal size={16} />
                     </div>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem 
+                    <DropdownMenuItem
                       onClick={(e) => {
-                      e.stopPropagation();
-                      onDeleteChat(conv.id);
+                        e.stopPropagation();
+                        onDeleteChat(conv.id);
                       }}
                       className="flex items-center gap-2 text-destructive hover:text-destructive hover:bg-red-100 dark:hover:bg-red-900/30"
                     >
