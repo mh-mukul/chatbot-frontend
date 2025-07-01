@@ -316,8 +316,13 @@ export function ChatLayout() {
           if (existingConversationIndex > -1) {
             // Update existing conversation
             const updatedConversations = [...prevConversations];
-            updatedConversations[existingConversationIndex].messages.push(userMessage, newAssistantMessage);
-            updatedConversations[existingConversationIndex].date_time = new Date().toISOString(); // Update last activity
+            const updatedIndex = updatedConversations.findIndex(conv => conv.id === newSessionId);
+            if (updatedIndex > -1) {
+              const [updatedConversation] = updatedConversations.splice(updatedIndex, 1);
+              updatedConversation.messages.push(userMessage, newAssistantMessage);
+              updatedConversation.date_time = new Date().toISOString();
+              updatedConversations.unshift(updatedConversation);
+            }
             return updatedConversations;
           } else {
             // Create new conversation

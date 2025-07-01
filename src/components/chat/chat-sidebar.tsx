@@ -71,7 +71,7 @@ export function ChatSidebar({
               >
                 <MessageSquare size={16} />
                 <span className="truncate group-data-[collapsible=icon]:hidden">
-                  {conv.messages.length > 0 ? conv.messages[conv.messages.length - 1].content : 'New Chat'}
+                  {conv.messages.find((msg) => msg.role === 'user')?.content || 'New Chat'}
                 </span>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -90,7 +90,7 @@ export function ChatSidebar({
                         e.stopPropagation();
                         onDeleteChat(conv.id);
                       }}
-                      className="flex items-center gap-2 text-destructive hover:text-destructive hover:bg-red-100 dark:hover:bg-red-900/30"
+                      className="flex items-center gap-2 bg-destructive text-destructive-foreground hover:bg-destructive/90 focus:bg-destructive/90 focus:text-destructive-foreground"
                     >
                       <Trash size={16} />
                       Delete
