@@ -217,6 +217,7 @@ export function ChatLayout() {
           role: chat.message.type === 'human' ? 'user' : 'assistant',
           content: chat.message.content,
           createdAt: new Date(chat.date_time).getTime(),
+          chat_metadata: chat.chat_metadata,
         }));
         setActiveChatMessages(fetchedMessages);
       } else {

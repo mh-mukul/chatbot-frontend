@@ -4,6 +4,9 @@ export interface Message {
   content: string;
   isGenerating?: boolean;
   createdAt: number;
+  chat_metadata?: {
+    duration?: number;
+  };
 }
 
 export interface Conversation {

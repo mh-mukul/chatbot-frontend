@@ -6,6 +6,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { Loader2 } from 'lucide-react';
 import { Icons } from '../icons';
 import { Card, CardContent } from '../ui/card';
+import { useState } from 'react';
 
 interface ChatMessageProps {
   message: Message;
@@ -14,6 +15,11 @@ interface ChatMessageProps {
 
 export function ChatMessage({ message, onSendMessage }: ChatMessageProps) {
   const isAssistant = message.role === 'assistant';
+  const [isHovered, setIsHovered] = useState(false);
+
+  const formatDuration = (duration: number) => {
+    return duration.toFixed(1);
+  };
 
   return (
     <div
@@ -21,6 +27,8 @@ export function ChatMessage({ message, onSendMessage }: ChatMessageProps) {
         'flex items-start gap-3 w-full',
         isAssistant ? 'justify-start' : 'justify-end'
       )}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       {isAssistant && (
         <Avatar className="h-8 w-8 shrink-0">
@@ -35,14 +43,20 @@ export function ChatMessage({ message, onSendMessage }: ChatMessageProps) {
           {isAssistant ? (
             <div className="flex items-center space-x-2">
               <div className="text-left text-sm font-bold">Smart Buddy</div>
-              <div className="text-left text-xs text-muted-foreground">{new Date(message.createdAt).toLocaleDateString('en-US', {
-                month: '2-digit',
-                day: '2-digit',
-                year: 'numeric',
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true,
-              }).replace(',', '')}</div>
+              <div className="text-left text-xs text-muted-foreground">
+                {isHovered ? (
+                  new Date(message.createdAt).toLocaleDateString('en-US', {
+                    month: '2-digit',
+                    day: '2-digit',
+                    year: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true,
+                  }).replace(',', '')
+                ) : message.chat_metadata?.duration ? (
+                  `Thought for ${formatDuration(message.chat_metadata.duration)} seconds`
+                ) : null}
+              </div>
             </div>
           ) : null}
           <Card
