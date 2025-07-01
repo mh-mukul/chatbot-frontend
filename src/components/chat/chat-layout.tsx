@@ -286,12 +286,19 @@ export function ChatLayout() {
       if (data.status === 200 && data.data) {
         const newSessionId = data.data.session_id;
         const assistantResponseContent = data.data.response;
+        const assistantResponseDuration = data.data.duration;
 
         setCurrentSessionId(newSessionId);
 
         setActiveChatMessages(prevMessages => prevMessages.map(msg =>
           msg.id === assistantPlaceholder.id
-            ? { ...msg, content: assistantResponseContent, isGenerating: false, createdAt: Date.now() }
+            ? {
+                ...msg,
+                content: assistantResponseContent,
+                isGenerating: false,
+                createdAt: Date.now(),
+                chat_metadata: { duration: assistantResponseDuration }
+              }
             : msg
         ));
 
@@ -303,6 +310,7 @@ export function ChatLayout() {
             role: 'assistant',
             content: assistantResponseContent,
             createdAt: Date.now(),
+            chat_metadata: { duration: assistantResponseDuration },
           };
 
           if (existingConversationIndex > -1) {
