@@ -46,7 +46,6 @@ export function ChatLayout() {
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [employeeId, setEmployeeId] = useState<string | null>(null);
   const [chatHistory, setChatHistory] = useState<Chat[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
@@ -60,11 +59,9 @@ export function ChatLayout() {
 
   useEffect(() => {
     if (isClient) {
-      const isLoggedIn = localStorage.getItem('isLoggedIn');
-      const storedEmployeeId = localStorage.getItem('employeeId'); // Assuming employeeId is stored here
-      if (isLoggedIn === 'true' && storedEmployeeId) {
+      const jwtToken = sessionStorage.getItem('jwtToken');
+      if (jwtToken) {
         setIsAuthenticated(true);
-        setEmployeeId(storedEmployeeId);
       } else {
         router.push('/login');
       }
@@ -72,11 +69,11 @@ export function ChatLayout() {
   }, [isClient, router]);
 
   const fetchChatHistoryHandler = useCallback(async (page: number = 1) => {
-    if (!employeeId) return;
+    if (!isAuthenticated) return; // Ensure authenticated before fetching history
 
     setIsLoadingHistory(true);
     try {
-      const data = await fetchChatHistory(employeeId || '', page, isMobileRef.current ? 20 : 30);
+      const data = await fetchChatHistory(page, isMobileRef.current ? 20 : 30);
 
       if (data.status === 200 && data.data) {
         setChatHistory(prevHistory => [...prevHistory, ...data.data.chats]);
@@ -141,7 +138,7 @@ export function ChatLayout() {
     } finally {
       setIsLoadingHistory(false);
     }
-  }, [employeeId, toast]);
+  }, [isAuthenticated, toast]);
 
   const isMobile = useIsMobile();
   const isMobileRef = useRef(isMobile);
@@ -151,10 +148,10 @@ export function ChatLayout() {
   }, [isMobile]);
 
   useEffect(() => {
-    if (isAuthenticated && employeeId) {
+    if (isAuthenticated) {
       fetchChatHistoryHandler(1); // Fetch initial history on authentication
     }
-  }, [isAuthenticated, employeeId, fetchChatHistoryHandler]);
+  }, [isAuthenticated, fetchChatHistoryHandler]);
 
   const activeConversation = conversations.find(c => c.id === activeConversationId);
 
@@ -165,7 +162,7 @@ export function ChatLayout() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('isLoggedIn');
+    sessionStorage.removeItem('jwtToken');
     router.push('/login');
   };
 
@@ -248,7 +245,7 @@ export function ChatLayout() {
   };
 
   const handleSendMessage = async (input: string) => {
-    if (!employeeId || isSendingMessage) return;
+    if (!isAuthenticated || isSendingMessage) return;
 
     // Generate a new session ID if there isn't one
     let newSessionId = currentSessionId;
@@ -281,7 +278,7 @@ export function ChatLayout() {
     setIsSendingMessage(true);
 
     try {
-      const data = await sendMessage(employeeId, input, currentSessionId || undefined);
+      const data = await sendMessage(input, currentSessionId || undefined);
 
       if (data.status === 200 && data.data) {
         const newSessionId = data.data.session_id;

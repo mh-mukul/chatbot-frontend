@@ -6,15 +6,40 @@ if (!baseUrl || !apiKey) {
   throw new Error("API Base URL or API Key not configured in .env");
 }
 
-export async function fetchChatHistory(userId: string, page: number = 1, limit: number = 50) {
-  const url = `${baseUrl}/api/v1/chat?user_id=${userId}&page=${page}&limit=${limit}`;
+function getAuthHeaders() {
+  const jwtToken = typeof window !== 'undefined' ? sessionStorage.getItem('jwtToken') : null;
+  if (!jwtToken) {
+    throw new Error("JWT token not found. User not authenticated.");
+  }
+  return {
+    'Authorization': `Bearer ${jwtToken}`,
+    'Content-Type': 'application/json',
+  };
+}
+
+// Helper function to handle unauthorized responses
+async function handleUnauthorized(response: Response) {
+  if (response.status === 401 || response.status === 403) {
+    console.error("Unauthorized or Forbidden: Token expired or invalid. Redirecting to login.");
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('jwtToken');
+      window.location.href = '/login'; // Redirect to login page
+    }
+    return true; // Indicate that a redirect is happening
+  }
+  return false; // Indicate no redirect
+}
+
+export async function fetchChatHistory(page: number = 1, limit: number = 50) {
+  const url = `${baseUrl}/api/v1/chat?page=${page}&limit=${limit}`;
   const response = await fetch(url, {
     method: 'GET',
-    headers: {
-      'Authorization': apiKey || '',
-      'Content-Type': 'application/json',
-    },
+    headers: getAuthHeaders(),
   });
+
+  if (await handleUnauthorized(response)) {
+    throw new Error("Unauthorized access, redirecting to login.");
+  }
 
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
@@ -27,11 +52,12 @@ export async function deleteChat(sessionId: string) {
   const url = `${baseUrl}/api/v1/chat/${sessionId}`;
   const response = await fetch(url, {
     method: 'DELETE',
-    headers: {
-      'Authorization': apiKey || '',
-      'Content-Type': 'application/json',
-    },
+    headers: getAuthHeaders(),
   });
+
+  if (await handleUnauthorized(response)) {
+    throw new Error("Unauthorized access, redirecting to login.");
+  }
 
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
@@ -44,11 +70,12 @@ export async function fetchChatMessages(sessionId: string) {
   const url = `${baseUrl}/api/v1/chat/${sessionId}`;
   const response = await fetch(url, {
     method: 'GET',
-    headers: {
-      'Authorization': apiKey || '',
-      'Content-Type': 'application/json',
-    },
+    headers: getAuthHeaders(),
   });
+
+  if (await handleUnauthorized(response)) {
+    throw new Error("Unauthorized access, redirecting to login.");
+  }
 
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
@@ -57,9 +84,8 @@ export async function fetchChatMessages(sessionId: string) {
   return await response.json();
 }
 
-export async function sendMessage(userId: string, query: string, sessionId?: string) {
-  const requestBody: { user_id: string; query: string; session_id?: string } = {
-    user_id: userId,
+export async function sendMessage(query: string, sessionId?: string) {
+  const requestBody: { query: string; session_id?: string } = {
     query: query,
   };
 
@@ -69,12 +95,13 @@ export async function sendMessage(userId: string, query: string, sessionId?: str
 
   const response = await fetch(`${baseUrl}/api/v1/chat`, {
     method: 'POST',
-    headers: {
-      'Authorization': apiKey || '',
-      'Content-Type': 'application/json',
-    },
+    headers: getAuthHeaders(),
     body: JSON.stringify(requestBody),
   });
+
+  if (await handleUnauthorized(response)) {
+    throw new Error("Unauthorized access, redirecting to login.");
+  }
 
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);

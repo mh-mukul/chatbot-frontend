@@ -21,7 +21,7 @@ import { Loader2 } from 'lucide-react';
 import { login } from '@/api/login';
 
 const formSchema = z.object({
-  employee_id: z.string().min(1, 'Employee ID is required'),
+  phone: z.string().min(1, 'Phone number is required'),
   password: z.string().min(1, 'Password is required'),
 });
 
@@ -36,8 +36,8 @@ export default function LoginPage() {
   
   useEffect(() => {
     if (isClient) {
-        const isLoggedIn = localStorage.getItem('isLoggedIn');
-        if (isLoggedIn === 'true') {
+        const jwtToken = sessionStorage.getItem('jwtToken');
+        if (jwtToken) {
           router.push('/');
         }
     }
@@ -46,25 +46,26 @@ export default function LoginPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      employee_id: '',
+      phone: '',
       password: '',
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    const success = await login(values.employee_id, values.password);
-    if (success) {
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('employeeId', values.employee_id); // Store employee_id
-      router.push('/');
-    } else {
-      toast({
-        variant: 'destructive',
-        title: 'Login Failed',
-        description: 'Invalid employee_id or password.',
-      });
-    }
-  }
+ async function onSubmit(values: z.infer<typeof formSchema>) {
+   const response = await login(values.phone, values.password);
+   if (response && response.token) {
+     sessionStorage.setItem('jwtToken', response.token);
+     localStorage.removeItem('isLoggedIn'); // Remove old localStorage items
+     localStorage.removeItem('employeeId'); // Remove old localStorage items
+     router.push('/');
+   } else {
+     toast({
+       variant: 'destructive',
+       title: 'Login Failed',
+       description: response?.message || 'Invalid phone number or password.',
+     });
+   }
+ }
 
   if (!isClient) {
     return (
@@ -86,12 +87,12 @@ export default function LoginPage() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="employee_id"
+                name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Employee ID</FormLabel>
+                    <FormLabel>Phone Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter your Employee ID" {...field} />
+                      <Input placeholder="Enter your Phone Number" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
