@@ -33,6 +33,8 @@ import { ChatSidebar } from './chat-sidebar';
 import { ChatThread } from './chat-thread';
 import { ChatInput } from './chat-input';
 import { fetchChatHistory, fetchChatMessages, sendMessage, deleteChat } from '@/api/chat';
+import { logout } from '@/api/auth';
+import { clearTokens, getRefreshToken, redirectToLogin } from '@/lib/auth-utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 
@@ -59,8 +61,8 @@ export function ChatLayout() {
 
   useEffect(() => {
     if (isClient) {
-      const jwtToken = sessionStorage.getItem('jwtToken');
-      if (jwtToken) {
+      const accessToken = sessionStorage.getItem('accessToken');
+      if (accessToken) {
         setIsAuthenticated(true);
       } else {
         router.push('/login');
@@ -73,14 +75,14 @@ export function ChatLayout() {
 
     setIsLoadingHistory(true);
     try {
-      const data = await fetchChatHistory(page, isMobileRef.current ? 20 : 30);
+      const response = await fetchChatHistory(page, isMobileRef.current ? 20 : 30);
 
-      if (data.status === 200 && data.data) {
-        setChatHistory(prevHistory => [...prevHistory, ...data.data.chats]);
-        setPagination(data.data.pagination);
+      if (response.status === 200 && response.data) {
+        setChatHistory(prevHistory => [...prevHistory, ...response.data?.chats || []]);
+        setPagination(response.data.pagination);
 
         // Convert fetched chats to Conversation format for display in sidebar
-        const newConversations: Conversation[] = data.data.chats.map((chat: Chat) => ({
+        const newConversations: Conversation[] = response.data.chats.map((chat: Chat) => ({
           id: chat.session_id, // Use session_id as conversation ID
           title: chat.message.content, // Use the first message content as title
           messages: [{
@@ -125,7 +127,7 @@ export function ChatLayout() {
         toast({
           variant: "destructive",
           title: "API Error",
-          description: data.message || "Failed to fetch chat history.",
+          description: response.message || "Failed to fetch chat history.",
         });
       }
     } catch (error) {
@@ -161,9 +163,18 @@ export function ChatLayout() {
     setActiveChatMessages([]); // Clear messages for new chat
   };
 
-  const handleLogout = () => {
-    sessionStorage.removeItem('jwtToken');
-    router.push('/login');
+  const handleLogout = async () => {
+    const refreshToken = getRefreshToken();
+    if (refreshToken) {
+      try {
+        await logout(refreshToken);
+      } catch (error) {
+        console.error("Logout API error:", error);
+        // Even if logout API fails, clear tokens locally
+      }
+    }
+    clearTokens();
+    redirectToLogin();
   };
 
   const handleDeleteChat = useCallback((sessionId: string) => {
@@ -206,10 +217,10 @@ export function ChatLayout() {
 
     setIsLoadingChatMessages(true);
     try {
-      const data = await fetchChatMessages(sessionId);
+      const response = await fetchChatMessages(sessionId);
 
-      if (data.status === 200 && data.data) {
-        const fetchedMessages: Message[] = data.data.map((chat: Chat) => ({
+      if (response.status === 200 && response.data) {
+        const fetchedMessages: Message[] = response.data.map((chat: Chat) => ({
           id: chat.id.toString(),
           role: chat.message.type === 'human' ? 'user' : 'assistant',
           content: chat.message.content,
@@ -221,7 +232,7 @@ export function ChatLayout() {
         toast({
           variant: "destructive",
           title: "API Error",
-          description: data.message || "Failed to fetch chat messages.",
+          description: response.message || "Failed to fetch chat messages.",
         });
       }
     } catch (error) {
@@ -278,12 +289,12 @@ export function ChatLayout() {
     setIsSendingMessage(true);
 
     try {
-      const data = await sendMessage(input, currentSessionId || undefined);
+      const response = await sendMessage(input, currentSessionId || undefined);
 
-      if (data.status === 200 && data.data) {
-        const newSessionId = data.data.session_id;
-        const assistantResponseContent = data.data.response;
-        const assistantResponseDuration = data.data.duration;
+      if (response.status === 200 && response.data) {
+        const newSessionId = response.data.session_id;
+        const assistantResponseContent = response.data.response;
+        const assistantResponseDuration = response.data.duration;
 
         setCurrentSessionId(newSessionId);
 
@@ -342,7 +353,7 @@ export function ChatLayout() {
         toast({
           variant: "destructive",
           title: "API Error",
-          description: data.message || "Failed to get chat response.",
+          description: response.message || "Failed to get chat response.",
         });
         setActiveChatMessages(prevMessages => prevMessages.filter(msg => msg.id !== assistantPlaceholder.id)); // Remove placeholder
       }

@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
-import { login } from '@/api/login';
+import { login } from '@/api/auth';
 
 const formSchema = z.object({
   phone: z.string().min(1, 'Phone number is required'),
@@ -36,8 +36,8 @@ export default function LoginPage() {
   
   useEffect(() => {
     if (isClient) {
-        const jwtToken = sessionStorage.getItem('jwtToken');
-        if (jwtToken) {
+        const accessToken = sessionStorage.getItem('accessToken');
+        if (accessToken) {
           router.push('/');
         }
     }
@@ -53,8 +53,9 @@ export default function LoginPage() {
 
  async function onSubmit(values: z.infer<typeof formSchema>) {
    const response = await login(values.phone, values.password);
-   if (response && response.token) {
-     sessionStorage.setItem('jwtToken', response.token);
+   if (response && response.accessToken && response.refreshToken) {
+     sessionStorage.setItem('accessToken', response.accessToken);
+     sessionStorage.setItem('refreshToken', response.refreshToken);
      localStorage.removeItem('isLoggedIn'); // Remove old localStorage items
      localStorage.removeItem('employeeId'); // Remove old localStorage items
      router.push('/');
