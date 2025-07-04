@@ -167,7 +167,7 @@ export function ChatLayout() {
     const refreshToken = getRefreshToken();
     if (refreshToken) {
       try {
-        await logout(refreshToken);
+        await logout();
       } catch (error) {
         console.error("Logout API error:", error);
         // Even if logout API fails, clear tokens locally
@@ -413,7 +413,7 @@ export function ChatLayout() {
           onDeleteChat={handleDeleteChat}
         />
       </Sidebar>
-      <SidebarInset className="pt-16"> {/* Add padding-top to account for fixed header */}
+      <SidebarInset className={`pt-16 ${isMobile && !activeConversationId ? 'pb-24' : ''}`}> {/* Add padding-top for header, padding-bottom for fixed input on mobile new chat */}
         {isLoadingChatMessages ? (
           <div className="flex h-full items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin" />
@@ -426,21 +426,30 @@ export function ChatLayout() {
               isSendingMessage={isSendingMessage}
             />
           ) : (
-            <div className="flex h-full items-center justify-center">
-              <div className="flex flex-col items-center w-full">
-                <div className="flex flex-col items-center justify-center text-center max-w-md  p-6">
-                  <h1 className="text-3xl font-semibold text-foreground">
-                    Where should we begin?
-                  </h1>
-                  <p className="mt-2 text-muted-foreground">
-                    I can help you with a variety of tasks. Start a conversation below.
-                  </p>
-                </div>
-                <div className="max-w-[70%] w-full p-4">
-                  <ChatInput onSendMessage={handleSendMessage} isSendingMessage={isSendingMessage} />
+            <>
+              <div className="flex h-full mt-40 justify-center">
+                <div className="flex flex-col items-center w-full">
+                  <div className="flex flex-col items-center justify-center text-center max-w-md  p-6">
+                    <h1 className="text-3xl font-semibold text-foreground">
+                      Where should we begin?
+                    </h1>
+                    {/* <p className="mt-2 text-muted-foreground">
+                      I can help you with a variety of tasks. Start a conversation below.
+                    </p> */}
+                  </div>
+                  {!isMobile && (
+                    <div className="max-w-[70%] w-full p-4">
+                      <ChatInput onSendMessage={handleSendMessage} isSendingMessage={isSendingMessage} />
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
+              {isMobile && (
+                <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-sm z-10">
+                  <ChatInput onSendMessage={handleSendMessage} isSendingMessage={isSendingMessage} />
+                </div>
+              )}
+            </>
           )
         )}
       </SidebarInset>

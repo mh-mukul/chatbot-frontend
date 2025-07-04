@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Send, ArrowUp, Plus, Mic, Wrench } from 'lucide-react';
+import { ArrowUp, Plus, Mic, Wrench } from 'lucide-react';
 
 interface ChatInputProps {
   onSendMessage: (input: string) => Promise<void>;
@@ -50,12 +50,13 @@ export function ChatInput({ onSendMessage, isSendingMessage }: ChatInputProps) {
   return (
     <form onSubmit={handleSubmit} className="relative flex items-end gap-2 w-full">
       {/* Left side buttons */}
-      <div className="absolute bottom-[5px] left-[10px] flex gap-1">
+      <div className="absolute bottom-[5px] left-[5px] flex gap-1">
         <Button
           type="button"
           size="icon"
           variant="ghost"
           className="h-8 w-8 shrink-0 rounded-full"
+          title='Add attachment'
         >
           <Plus size={16} />
           <span className="sr-only">Add attachment</span>
@@ -65,6 +66,7 @@ export function ChatInput({ onSendMessage, isSendingMessage }: ChatInputProps) {
           size="icon"
           variant="ghost"
           className="h-8 w-8 shrink-0 rounded-full"
+          title='Tools'
         >
           <Wrench size={16} />
           <span className="sr-only">Tools</span>
@@ -77,7 +79,7 @@ export function ChatInput({ onSendMessage, isSendingMessage }: ChatInputProps) {
         onKeyDown={handleKeyDown}
         placeholder="Ask anything..."
         ref={textareaRef}
-        className="pl-5 resize-none w-full rounded-xl"
+        className="pl-4 resize-none w-full rounded-xl"
         disabled={isSendingMessage}
       />
 
@@ -88,6 +90,7 @@ export function ChatInput({ onSendMessage, isSendingMessage }: ChatInputProps) {
           size="icon"
           variant="ghost"
           className="h-8 w-8 shrink-0 rounded-full"
+          title='Voice input'
         >
           <Mic size={16} />
           <span className="sr-only">Voice input</span>
