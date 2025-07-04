@@ -1,4 +1,4 @@
-import { getAccessToken, attemptTokenRefresh, clearTokens, redirectToLogin } from './auth-utils';
+import { getAccessToken, attemptTokenRefresh, redirectToLogin } from './auth-utils';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -29,6 +29,14 @@ export async function apiClient<T>(
     });
 
     if (response.status === 401) {
+      // If the current request is for refreshing the token and it returns 401,
+      // it means the refresh token itself is invalid/expired.
+      // In this case, do NOT attempt to refresh again. Just clear and redirect.
+      if (endpoint === '/api/v1/auth/refresh-token') {
+        redirectToLogin(); // This handles clearTokens()
+        return { status: 401, message: 'Unauthorized: Refresh token expired.' };
+      }
+
       const refreshed = await attemptTokenRefresh();
       if (refreshed) {
         // Retry the original request with the new token
@@ -41,8 +49,8 @@ export async function apiClient<T>(
           headers,
         });
       } else {
-        // If refresh failed, auth-utils would have already redirected to login
-        return { status: 401, message: 'Unauthorized: Token refresh failed' };
+        redirectToLogin(); // This now handles clearTokens()
+        return { status: 401, message: 'Unauthorized: Token refresh failed and redirected to login.' };
       }
     }
 
@@ -55,9 +63,12 @@ export async function apiClient<T>(
     }
   } catch (error) {
     console.error('API client error:', error);
-    // If it's a network error and not a 401, we might still want to clear tokens
-    // if the user is truly unauthenticated, but for now, let's assume
-    // attemptTokenRefresh handles the 401 case.
+    // If a network error occurs, and we have tokens, it's safer to clear and redirect.
+    // This prevents the app from being stuck if the server is down or unreachable
+    // and the user's session might implicitly be invalid.
+    if (getAccessToken()) { // Only redirect if we actually had tokens
+      redirectToLogin(); // This now handles clearTokens()
+    }
     return { status: 500, message: 'Network error or server is unreachable' };
   }
 }

@@ -1,4 +1,5 @@
 import { apiClient } from '@/lib/api-client';
+import { getRefreshToken, redirectToLogin } from '@/lib/auth-utils';
 
 export async function login(phone: string, password: string): Promise<{ accessToken?: string; refreshToken?: string; message?: string }> {
   const response = await apiClient<{ access_token: string; refresh_token: string }>('/api/v1/auth/login', {
@@ -13,16 +14,35 @@ export async function login(phone: string, password: string): Promise<{ accessTo
   }
 }
 
-export async function logout(refreshToken: string): Promise<{ success: boolean; message?: string }> {
-  const response = await apiClient('/api/v1/auth/logout', {
-    method: 'POST',
-    body: JSON.stringify({ refresh_token: refreshToken }),
-  });
+export async function logout(): Promise<{ success: boolean; message?: string }> {
+  const refreshToken = getRefreshToken(); // Get refresh token locally
 
-  if (response.status === 200) {
-    return { success: true, message: response.message };
-  } else {
-    return { success: false, message: response.message || 'Logout failed' };
+  if (!refreshToken) {
+    // If no refresh token, we've already cleared local state, so consider it a success.
+    // No need to call backend if no token to send.
+    redirectToLogin(); // Ensure redirection if not already
+    return { success: true, message: 'Logged out successfully (no refresh token found).' };
+  }
+
+  try {
+    const response = await apiClient('/api/v1/auth/logout', {
+      method: 'POST',
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+
+    if (response.status === 200) {
+      return { success: true, message: response.message };
+    } else {
+      // Even if backend logout fails, local tokens are cleared.
+      // We should still redirect to login if not already.
+      redirectToLogin();
+      return { success: true, message: response.message || 'Logout failed on server, but local session cleared.' };
+    }
+  } catch (error) {
+    console.error('Error during logout API call:', error);
+    // Even if network error, local tokens are cleared.
+    redirectToLogin();
+    return { success: true, message: 'Network error during logout, but local session cleared.' };
   }
 }
 

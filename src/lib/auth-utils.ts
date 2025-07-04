@@ -19,6 +19,7 @@ export function clearTokens(): void {
 }
 
 export function redirectToLogin(): void {
+  clearTokens(); // Ensure tokens are cleared immediately before redirection
   window.location.href = '/login';
 }
 
@@ -48,7 +49,6 @@ export async function attemptTokenRefresh(): Promise<boolean> {
   const refreshToken = getRefreshToken();
 
   if (!refreshToken) {
-    clearTokens();
     redirectToLogin();
     processQueue('No refresh token available');
     isRefreshing = false;
@@ -62,14 +62,12 @@ export async function attemptTokenRefresh(): Promise<boolean> {
       processQueue(null);
       return true;
     } else {
-      clearTokens();
       redirectToLogin();
       processQueue(response.message || 'Failed to refresh token');
       return false;
     }
   } catch (error) {
-    console.error('Error during token refresh attempt:', error);
-    clearTokens();
+    console.error('Error during token refresh attempt:', error); // Keep this log
     redirectToLogin();
     processQueue(error);
     return false;
