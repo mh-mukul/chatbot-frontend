@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Send } from 'lucide-react';
+import { Send, ArrowUp, Plus, Mic, Wrench } from 'lucide-react';
 
 interface ChatInputProps {
   onSendMessage: (input: string) => Promise<void>;
@@ -12,7 +12,25 @@ interface ChatInputProps {
 
 export function ChatInput({ onSendMessage, isSendingMessage }: ChatInputProps) {
   const [input, setInput] = useState('');
-  // Remove local isLoading state, use isSendingMessage from props
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const maxRows = 8;
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      const scrollHeight = textareaRef.current.scrollHeight;
+      const lineHeight = parseInt(getComputedStyle(textareaRef.current).lineHeight);
+      const currentRows = Math.ceil(scrollHeight / lineHeight);
+
+      if (currentRows > maxRows) {
+        textareaRef.current.style.overflowY = 'auto';
+        textareaRef.current.style.height = `${maxRows * lineHeight}px`;
+      } else {
+        textareaRef.current.style.overflowY = 'hidden';
+        textareaRef.current.style.height = `${scrollHeight}px`;
+      }
+    }
+  }, [input]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,24 +49,59 @@ export function ChatInput({ onSendMessage, isSendingMessage }: ChatInputProps) {
 
   return (
     <form onSubmit={handleSubmit} className="relative flex items-end gap-2 w-full">
+      {/* Left side buttons */}
+      <div className="absolute bottom-[5px] left-[10px] flex gap-1">
+        <Button
+          type="button"
+          size="icon"
+          variant="ghost"
+          className="h-8 w-8 shrink-0 rounded-full"
+        >
+          <Plus size={16} />
+          <span className="sr-only">Add attachment</span>
+        </Button>
+        <Button
+          type="button"
+          size="icon"
+          variant="ghost"
+          className="h-8 w-8 shrink-0 rounded-full"
+        >
+          <Wrench size={16} />
+          <span className="sr-only">Tools</span>
+        </Button>
+      </div>
+
       <Textarea
         value={input}
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Ask Smart Buddy anything..."
-        className="min-h-[40px] pr-12 resize-none w-full"
-        rows={1}
-        disabled={isSendingMessage} // Use isSendingMessage from props
+        placeholder="Ask anything..."
+        ref={textareaRef}
+        className="pl-5 resize-none w-full rounded-xl"
+        disabled={isSendingMessage}
       />
-      <Button
-        type="submit"
-        size="icon"
-        className="absolute bottom-[5px] right-[5px] h-8 w-8 shrink-0"
-        disabled={isSendingMessage || !input.trim()} // Use isSendingMessage from props
-      >
-        <Send size={16} />
-        <span className="sr-only">Send message</span>
-      </Button>
+
+      {/* Right side buttons */}
+      <div className="absolute bottom-[5px] right-[5px] flex gap-1">
+        <Button
+          type="button"
+          size="icon"
+          variant="ghost"
+          className="h-8 w-8 shrink-0 rounded-full"
+        >
+          <Mic size={16} />
+          <span className="sr-only">Voice input</span>
+        </Button>
+        <Button
+          type="submit"
+          size="icon"
+          className="h-8 w-8 shrink-0 rounded-full"
+          disabled={isSendingMessage || !input.trim()}
+        >
+          <ArrowUp size={16} />
+          <span className="sr-only">Send message</span>
+        </Button>
+      </div>
     </form>
   );
 }
