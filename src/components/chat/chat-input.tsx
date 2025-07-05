@@ -79,7 +79,7 @@ export function ChatInput({ onSendMessage, isSendingMessage }: ChatInputProps) {
         onKeyDown={handleKeyDown}
         placeholder="Ask anything..."
         ref={textareaRef}
-        className="pl-4 resize-none w-full rounded-xl"
+        className="pl-4 resize-none w-full rounded-xl focus-visible:outline-none"
         disabled={isSendingMessage}
       />
 
