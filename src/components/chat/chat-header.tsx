@@ -52,7 +52,7 @@ export function ChatHeader({ onLogout }: ChatHeaderProps) {
             className="relative h-8 w-8 rounded-full"
           >
             <Avatar className="h-8 w-8">
-              <AvatarImage src={user?.image_url || 'http://404-not-found.png'} alt={user?.name || ''} />
+              <AvatarImage src={user?.image_url || ''} alt={user?.name || ''} />
               <AvatarFallback>{userInitial}</AvatarFallback>
             </Avatar>
           </Button>

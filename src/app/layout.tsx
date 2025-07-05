@@ -4,8 +4,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from '@/components/theme-provider';
 
 export const metadata: Metadata = {
-  title: 'SmartBuddy',
+  title: 'Chatbot',
   description: 'Your intelligent assistant',
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({

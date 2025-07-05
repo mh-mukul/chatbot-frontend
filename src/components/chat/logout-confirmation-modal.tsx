@@ -25,13 +25,13 @@ export function LogoutConfirmationModal({
 }: LogoutConfirmationModalProps) {
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
-      <AlertDialogContent className="max-w-sm rounded-lg p-6">
+      <AlertDialogContent className="w-[90%] max-w-md rounded-lg p-4 sm:p-6">
         <AlertDialogHeader className="text-center">
-          <AlertDialogTitle className="text-xl font-bold">
+          <AlertDialogTitle className="text-xl font-bold text-center">
             Are you sure you want to log out?
           </AlertDialogTitle>
           <AlertDialogDescription className="text-center text-muted-foreground">
-            Log out of SmartBuddy as {userEmail}?
+            Log out of Chatbot as {userEmail}?
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="flex flex-col space-y-2 sm:flex-col sm:space-x-0 sm:space-y-2">

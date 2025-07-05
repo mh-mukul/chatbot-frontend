@@ -116,18 +116,18 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden">
-        <div className="flex h-full">
-          <div className="w-1/3 bg-secondary/20 p-4 border-r">
+        <div className="flex flex-col md:flex-row h-full">
+          <div className="border-b bg-secondary/20 p-4 md:w-1/3 md:border-b-0 md:border-r">
             <div className="flex items-center justify-between mb-4">
               {/* <h2 className="text-xl font-semibold">Settings</h2> */}
               <Button className='rounded-full' variant="ghost" size="icon" onClick={onClose}>
                 <X className="h-5 w-5" />
               </Button>
             </div>
-            <nav className="space-y-1">
+            <nav className="flex flex-wrap gap-2 md:flex-col md:gap-0 md:space-y-1">
               <Button
                 variant={activeTab === 'General' ? 'secondary' : 'ghost'}
-                className="w-full justify-start"
+                className="justify-start md:w-full"
                 onClick={() => setActiveTab('General')}
               >
                 <Settings className="mr-2 h-4 w-4" />
@@ -135,7 +135,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </Button>
               <Button
                 variant={activeTab === 'Notifications' ? 'secondary' : 'ghost'}
-                className="w-full justify-start"
+                className="justify-start md:w-full"
                 onClick={() => setActiveTab('Notifications')}
               >
                 <Bell className="mr-2 h-4 w-4" />
@@ -143,7 +143,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </Button>
               <Button
                 variant={activeTab === 'Personalization' ? 'secondary' : 'ghost'}
-                className="w-full justify-start"
+                className="justify-start md:w-full"
                 onClick={() => setActiveTab('Personalization')}
               >
                 <User className="mr-2 h-4 w-4" />
@@ -151,7 +151,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </Button>
               <Button
                 variant={activeTab === 'Connected apps' ? 'secondary' : 'ghost'}
-                className="w-full justify-start"
+                className="justify-start md:w-full"
                 onClick={() => setActiveTab('Connected apps')}
               >
                 <Link className="mr-2 h-4 w-4" />
@@ -159,7 +159,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </Button>
               <Button
                 variant={activeTab === 'Data controls' ? 'secondary' : 'ghost'}
-                className="w-full justify-start"
+                className="justify-start md:w-full"
                 onClick={() => setActiveTab('Data controls')}
               >
                 <Database className="mr-2 h-4 w-4" />
@@ -167,7 +167,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </Button>
               <Button
                 variant={activeTab === 'Security' ? 'secondary' : 'ghost'}
-                className="w-full justify-start"
+                className="justify-start md:w-full"
                 onClick={() => setActiveTab('Security')}
               >
                 <Shield className="mr-2 h-4 w-4" />
@@ -175,7 +175,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </Button>
               <Button
                 variant={activeTab === 'Account' ? 'secondary' : 'ghost'}
-                className="w-full justify-start"
+                className="justify-start md:w-full"
                 onClick={() => setActiveTab('Account')}
               >
                 <Key className="mr-2 h-4 w-4" />
@@ -183,7 +183,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </Button>
             </nav>
           </div>
-          <div className="w-2/3">
+          <div className="md:w-2/3">
             {renderContent()}
           </div>
         </div>
