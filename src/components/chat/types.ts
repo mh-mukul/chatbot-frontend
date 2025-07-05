@@ -49,3 +49,22 @@ export interface ChatHistoryResponse {
   message: string;
   data: ChatData;
 }
+
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  is_active: boolean;
+  image_url: string;
+}
+
+export interface LoginResponse {
+  status: number;
+  message: string;
+  data: {
+    access_token: string;
+    refresh_token: string;
+    user: User;
+  };
+}

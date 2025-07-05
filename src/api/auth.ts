@@ -1,14 +1,16 @@
 import { apiClient } from '@/lib/api-client';
 import { getRefreshToken, redirectToLogin } from '@/lib/auth-utils';
 
-export async function login(phone: string, password: string): Promise<{ accessToken?: string; refreshToken?: string; message?: string }> {
-  const response = await apiClient<{ access_token: string; refresh_token: string }>('/api/v1/auth/login', {
+import { LoginResponse } from '@/components/chat/types';
+
+export async function login(phone: string, password: string): Promise<{ accessToken?: string; refreshToken?: string; message?: string; user?: LoginResponse['data']['user'] }> {
+  const response = await apiClient<LoginResponse['data']>('/api/v1/auth/login', {
     method: 'POST',
     body: JSON.stringify({ phone, password }),
   });
 
   if (response.status === 200 && response.data) {
-    return { accessToken: response.data.access_token, refreshToken: response.data.refresh_token, message: response.message };
+    return { accessToken: response.data.access_token, refreshToken: response.data.refresh_token, message: response.message, user: response.data.user };
   } else {
     return { message: response.message || 'Login failed' };
   }

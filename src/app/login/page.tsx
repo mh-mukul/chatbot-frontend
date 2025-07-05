@@ -53,9 +53,10 @@ export default function LoginPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     const response = await login(values.phone, values.password);
-    if (response && response.accessToken && response.refreshToken) {
+    if (response && response.accessToken && response.refreshToken && response.user) {
       sessionStorage.setItem('accessToken', response.accessToken);
       sessionStorage.setItem('refreshToken', response.refreshToken);
+      localStorage.setItem('user', JSON.stringify(response.user)); // Store user data
       localStorage.removeItem('isLoggedIn'); // Remove old localStorage items
       localStorage.removeItem('employeeId'); // Remove old localStorage items
       router.push('/chat');
