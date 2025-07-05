@@ -33,13 +33,13 @@ export default function LoginPage() {
   useEffect(() => {
     setIsClient(true);
   }, []);
-  
+
   useEffect(() => {
     if (isClient) {
-        const accessToken = sessionStorage.getItem('accessToken');
-        if (accessToken) {
-          router.push('/');
-        }
+      const accessToken = sessionStorage.getItem('accessToken');
+      if (accessToken) {
+        router.push('/chat');
+      }
     }
   }, [isClient, router]);
 
@@ -51,28 +51,28 @@ export default function LoginPage() {
     },
   });
 
- async function onSubmit(values: z.infer<typeof formSchema>) {
-   const response = await login(values.phone, values.password);
-   if (response && response.accessToken && response.refreshToken) {
-     sessionStorage.setItem('accessToken', response.accessToken);
-     sessionStorage.setItem('refreshToken', response.refreshToken);
-     localStorage.removeItem('isLoggedIn'); // Remove old localStorage items
-     localStorage.removeItem('employeeId'); // Remove old localStorage items
-     router.push('/');
-   } else {
-     toast({
-       variant: 'destructive',
-       title: 'Login Failed',
-       description: response?.message || 'Invalid phone number or password.',
-     });
-   }
- }
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    const response = await login(values.phone, values.password);
+    if (response && response.accessToken && response.refreshToken) {
+      sessionStorage.setItem('accessToken', response.accessToken);
+      sessionStorage.setItem('refreshToken', response.refreshToken);
+      localStorage.removeItem('isLoggedIn'); // Remove old localStorage items
+      localStorage.removeItem('employeeId'); // Remove old localStorage items
+      router.push('/chat');
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Login Failed',
+        description: response?.message || 'Invalid phone number or password.',
+      });
+    }
+  }
 
   if (!isClient) {
     return (
-        <div className="flex h-screen items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
     )
   }
 

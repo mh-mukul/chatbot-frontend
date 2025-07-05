@@ -110,7 +110,7 @@ export function ChatMessage({ message, onSendMessage }: ChatMessageProps) {
             <Card
               className={cn(
                 "rounded-2xl p-4 w-fit",
-                "bg-secondary text-secondary-foreground rounded-br-none"
+                "bg-secondary text-secondary-foreground rounded-br-none border-0"
               )}
             >
               <CardContent className="p-0 text-sm">

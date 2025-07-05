@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import type { Conversation, Message, Chat, Pagination } from '@/components/chat/types';
 import { useToast } from '@/hooks/use-toast';
 import { fetchChatHistory, fetchChatMessages, sendMessage, deleteChat } from '@/api/chat';
 import { logout } from '@/api/auth';
-import { clearTokens, getRefreshToken, redirectToLogin } from '@/lib/auth-utils';
+import { clearTokens, getRefreshToken, redirectToLogin, redirectToChat } from '@/lib/auth-utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 export function useChatManagement() {
@@ -15,6 +15,7 @@ export function useChatManagement() {
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const pathname = usePathname();
   const [isClient, setIsClient] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [chatHistory, setChatHistory] = useState<Chat[]>([]); // This state might be redundant after refactoring conversations
@@ -23,21 +24,9 @@ export function useChatManagement() {
   const [isLoadingChatMessages, setIsLoadingChatMessages] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [chatToDeleteId, setChatToDeleteId] = useState<string | null>(null);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  useEffect(() => {
-    if (isClient) {
-      const accessToken = sessionStorage.getItem('accessToken');
-      if (accessToken) {
-        setIsAuthenticated(true);
-      } else {
-        router.push('/login');
-      }
-    }
-  }, [isClient, router]);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  const [isUrlNavigation, setIsUrlNavigation] = useState(false);
+  const previousSessionIdRef = useRef<string | null>(null);
 
   const isMobile = useIsMobile();
   const isMobileRef = useRef(isMobile);
@@ -45,6 +34,90 @@ export function useChatManagement() {
   useEffect(() => {
     isMobileRef.current = isMobile;
   }, [isMobile]);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Define handleSelectChat first since it's used in the URL-based navigation effect
+  const handleSelectChat = useCallback(async (sessionId: string) => {
+    // Skip if we're already on this chat
+    if (sessionId === activeConversationId && activeChatMessages.length > 0) {
+      return;
+    }
+
+    setActiveConversationId(sessionId);
+    setCurrentSessionId(sessionId);
+    setActiveChatMessages([]);
+    previousSessionIdRef.current = sessionId;
+
+    // Only update the URL if not coming from URL navigation
+    if (!isUrlNavigation) {
+      router.push(`/chat/${sessionId}`);
+    }
+
+    setIsLoadingChatMessages(true);
+    try {
+      const response = await fetchChatMessages(sessionId);
+
+      if (response.status === 200 && response.data) {
+        const fetchedMessages: Message[] = response.data.map((chat: Chat) => ({
+          id: chat.id.toString(),
+          role: chat.message.type === 'human' ? 'user' : 'assistant',
+          content: chat.message.content,
+          createdAt: new Date(chat.date_time).getTime(),
+          chat_metadata: chat.chat_metadata,
+        }));
+        setActiveChatMessages(fetchedMessages);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "API Error",
+          description: response.message || "Failed to fetch chat messages.",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching chat messages:", error);
+      toast({
+        variant: "destructive",
+        title: "Network Error",
+        description: "Could not connect to the backend.",
+      });
+    } finally {
+      setIsLoadingChatMessages(false);
+    }
+  }, [activeConversationId, activeChatMessages.length, isUrlNavigation, router, toast]);
+
+  useEffect(() => {
+    if (isClient) {
+      const accessToken = sessionStorage.getItem('accessToken');
+      if (accessToken) {
+        setIsAuthenticated(true);
+
+        // Extract session ID from the path if we're on a specific chat page
+        if (pathname && pathname.startsWith('/chat/')) {
+          const sessionId = pathname.split('/').pop();
+          if (sessionId && sessionId !== previousSessionIdRef.current) {
+            previousSessionIdRef.current = sessionId;
+            setActiveConversationId(sessionId);
+            setCurrentSessionId(sessionId);
+            // Set flag to trigger URL-based navigation
+            setIsUrlNavigation(true);
+          }
+        }
+      } else {
+        router.push('/login');
+      }
+    }
+  }, [isClient, router, pathname]);
+
+  // Effect to handle URL-based navigation after handleSelectChat is defined
+  useEffect(() => {
+    if (isUrlNavigation && isAuthenticated && activeConversationId) {
+      handleSelectChat(activeConversationId);
+      setIsUrlNavigation(false);
+    }
+  }, [isUrlNavigation, isAuthenticated, activeConversationId, handleSelectChat]);
 
   const fetchChatHistoryHandler = useCallback(async (page: number = 1) => {
     if (!isAuthenticated) return;
@@ -112,16 +185,21 @@ export function useChatManagement() {
   }, [isAuthenticated, toast]);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !initialLoadComplete) {
       fetchChatHistoryHandler(1);
+      setInitialLoadComplete(true);
     }
-  }, [isAuthenticated, fetchChatHistoryHandler]);
+  }, [isAuthenticated, fetchChatHistoryHandler, initialLoadComplete]);
 
   const handleCreateNewChat = useCallback(() => {
-    setActiveConversationId(null);
-    setCurrentSessionId(null);
-    setActiveChatMessages([]);
-  }, []);
+    if (activeConversationId) {
+      setActiveConversationId(null);
+      setCurrentSessionId(null);
+      setActiveChatMessages([]);
+      previousSessionIdRef.current = null;
+      router.push('/chat');
+    }
+  }, [router, activeConversationId]);
 
   const handleLogout = useCallback(async () => {
     const refreshToken = getRefreshToken();
@@ -168,43 +246,6 @@ export function useChatManagement() {
       setChatToDeleteId(null);
     }
   }, [chatToDeleteId, activeConversationId, toast]);
-
-  const handleSelectChat = useCallback(async (sessionId: string) => {
-    setActiveConversationId(sessionId);
-    setCurrentSessionId(sessionId);
-    setActiveChatMessages([]);
-
-    setIsLoadingChatMessages(true);
-    try {
-      const response = await fetchChatMessages(sessionId);
-
-      if (response.status === 200 && response.data) {
-        const fetchedMessages: Message[] = response.data.map((chat: Chat) => ({
-          id: chat.id.toString(),
-          role: chat.message.type === 'human' ? 'user' : 'assistant',
-          content: chat.message.content,
-          createdAt: new Date(chat.date_time).getTime(),
-          chat_metadata: chat.chat_metadata,
-        }));
-        setActiveChatMessages(fetchedMessages);
-      } else {
-        toast({
-          variant: "destructive",
-          title: "API Error",
-          description: response.message || "Failed to fetch chat messages.",
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching chat messages:", error);
-      toast({
-        variant: "destructive",
-        title: "Network Error",
-        description: "Could not connect to the backend.",
-      });
-    } finally {
-      setIsLoadingChatMessages(false);
-    }
-  }, [toast]);
 
   const handleScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
@@ -258,12 +299,12 @@ export function useChatManagement() {
         setActiveChatMessages(prevMessages => prevMessages.map(msg =>
           msg.id === assistantPlaceholder.id
             ? {
-                ...msg,
-                content: assistantResponseContent,
-                isGenerating: false,
-                createdAt: Date.now(),
-                chat_metadata: { duration: assistantResponseDuration }
-              }
+              ...msg,
+              content: assistantResponseContent,
+              isGenerating: false,
+              createdAt: Date.now(),
+              chat_metadata: { duration: assistantResponseDuration }
+            }
             : msg
         ));
 
@@ -300,6 +341,7 @@ export function useChatManagement() {
 
         if (!activeConversationId) {
           setActiveConversationId(newSessionId);
+          router.push(`/chat/${newSessionId}`);
         }
 
       } else {
@@ -321,7 +363,7 @@ export function useChatManagement() {
     } finally {
       setIsSendingMessage(false);
     }
-  }, [isAuthenticated, isSendingMessage, currentSessionId, activeConversationId, toast]);
+  }, [isAuthenticated, isSendingMessage, currentSessionId, activeConversationId, toast, router]);
 
   const activeConversation = conversations.find(c => c.id === activeConversationId);
 

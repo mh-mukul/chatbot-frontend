@@ -23,6 +23,11 @@ export function redirectToLogin(): void {
   window.location.href = '/login';
 }
 
+export function redirectToChat(sessionId?: string): void {
+  const url = sessionId ? `/chat/${sessionId}` : '/chat';
+  window.location.href = url;
+}
+
 let isRefreshing = false;
 let failedQueue: { resolve: (value?: any) => void; reject: (reason?: any) => void; }[] = [];
 

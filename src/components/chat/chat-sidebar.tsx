@@ -42,7 +42,7 @@ export function ChatSidebar({
 
   return (
     <>
-      <SidebarHeader className="h-14 flex flex-row items-center justify-between border-b p-2 group-data-[collapsible=icon]:justify-center">
+      <SidebarHeader className="h-14 flex flex-row items-center justify-between p-2 group-data-[collapsible=icon]:justify-center">
         <div className="flex items-center p-2 group-data-[collapsible=icon]:hidden">
           <Bot size={24} className="text-primary" />
         </div>

@@ -1,9 +1,12 @@
-import { ChatLayout } from "@/components/chat/chat-layout";
+'use client';
+
+import { useEffect } from 'react';
+import { redirect } from 'next/navigation';
 
 export default function Home() {
-  return (
-    <main className="flex h-[100dvh] flex-col items-center justify-center">
-      <ChatLayout />
-    </main>
-  );
+  useEffect(() => {
+    redirect('/chat');
+  }, []);
+
+  return null;
 }
