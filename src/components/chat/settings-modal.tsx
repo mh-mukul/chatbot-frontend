@@ -10,10 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import {
   Settings,
-  Bell,
   User,
-  Link,
-  Database,
   Shield,
   Key,
   X,
@@ -96,14 +93,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </div>
           </div>
         );
-      case 'Notifications':
-        return <div className="p-4">Notifications settings will go here.</div>;
       case 'Personalization':
         return <div className="p-4">Personalization settings will go here.</div>;
-      case 'Connected apps':
-        return <div className="p-4">Connected apps settings will go here.</div>;
-      case 'Data controls':
-        return <div className="p-4">Data controls settings will go here.</div>;
       case 'Security':
         return <div className="p-4">Security settings will go here.</div>;
       case 'Account':
@@ -134,36 +125,12 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 General
               </Button>
               <Button
-                variant={activeTab === 'Notifications' ? 'secondary' : 'ghost'}
-                className="justify-start md:w-full"
-                onClick={() => setActiveTab('Notifications')}
-              >
-                <Bell className="mr-2 h-4 w-4" />
-                Notifications
-              </Button>
-              <Button
                 variant={activeTab === 'Personalization' ? 'secondary' : 'ghost'}
                 className="justify-start md:w-full"
                 onClick={() => setActiveTab('Personalization')}
               >
                 <User className="mr-2 h-4 w-4" />
                 Personalization
-              </Button>
-              <Button
-                variant={activeTab === 'Connected apps' ? 'secondary' : 'ghost'}
-                className="justify-start md:w-full"
-                onClick={() => setActiveTab('Connected apps')}
-              >
-                <Link className="mr-2 h-4 w-4" />
-                Connected apps
-              </Button>
-              <Button
-                variant={activeTab === 'Data controls' ? 'secondary' : 'ghost'}
-                className="justify-start md:w-full"
-                onClick={() => setActiveTab('Data controls')}
-              >
-                <Database className="mr-2 h-4 w-4" />
-                Data controls
               </Button>
               <Button
                 variant={activeTab === 'Security' ? 'secondary' : 'ghost'}

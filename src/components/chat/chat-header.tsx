@@ -1,10 +1,6 @@
 import {
-  Bolt,
   LogOut,
-  Sparkles,
   Settings,
-  LifeBuoy,
-  ChevronRight,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -67,22 +63,9 @@ export function ChatHeader({ onLogout }: ChatHeaderProps) {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>
-            <Sparkles className="mr-2 h-4 w-4" />
-            <span>Upgrade plan</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Bolt className="mr-2 h-4 w-4" />
-            <span>Customize</span>
-          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setIsSettingsModalOpen(true)}>
             <Settings className="mr-2 h-4 w-4" />
             <span>Settings</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <LifeBuoy className="mr-2 h-4 w-4" />
-            <span>Help</span>
-            <ChevronRight className="ml-auto h-4 w-4" />
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setIsLogoutModalOpen(true)}>
