@@ -35,7 +35,7 @@ export function ChatThread({ conversation, onSendMessage, isSendingMessage }: Ch
           ))}
         </div>
       </ScrollArea>
-      <div className="border-t p-4 bg-background/80 backdrop-blur-sm">
+      <div className=" p-4 bg-background/80 backdrop-blur-sm">
         <ChatInput onSendMessage={onSendMessage} isSendingMessage={isSendingMessage || false} />
       </div>
     </div>
