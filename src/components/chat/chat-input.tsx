@@ -48,62 +48,62 @@ export function ChatInput({ onSendMessage, isSendingMessage }: ChatInputProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="relative flex items-end gap-2 w-full">
-      {/* Left side buttons */}
-      <div className="absolute bottom-[5px] left-[5px] flex gap-1">
-        <Button
-          type="button"
-          size="icon"
-          variant="ghost"
-          className="h-8 w-8 shrink-0 rounded-full"
-          title='Add attachment'
-        >
-          <Plus size={16} />
-          <span className="sr-only">Add attachment</span>
-        </Button>
-        <Button
-          type="button"
-          size="icon"
-          variant="ghost"
-          className="h-8 w-8 shrink-0 rounded-full"
-          title='Tools'
-        >
-          <Wrench size={16} />
-          <span className="sr-only">Tools</span>
-        </Button>
-      </div>
-
-      <Textarea
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder="Ask anything..."
-        ref={textareaRef}
-        className="pl-4 resize-none w-full rounded-xl focus-visible:outline-none"
-        disabled={isSendingMessage}
-      />
-
-      {/* Right side buttons */}
-      <div className="absolute bottom-[5px] right-[5px] flex gap-1">
-        <Button
-          type="button"
-          size="icon"
-          variant="ghost"
-          className="h-8 w-8 shrink-0 rounded-full"
-          title='Voice input'
-        >
-          <Mic size={16} />
-          <span className="sr-only">Voice input</span>
-        </Button>
-        <Button
-          type="submit"
-          size="icon"
-          className="h-8 w-8 shrink-0 rounded-full"
-          disabled={isSendingMessage || !input.trim()}
-        >
-          <ArrowUp size={16} />
-          <span className="sr-only">Send message</span>
-        </Button>
+    <form onSubmit={handleSubmit} className="w-full">
+      <div className="bg-muted rounded-2xl p-2 shadow-lg border">
+        <Textarea
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Ask anything..."
+          ref={textareaRef}
+          className="bg-transparent w-full text-foreground placeholder-muted-foreground focus:outline-none resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+          disabled={isSendingMessage}
+        />
+        <div className="flex justify-between items-center mt-0">
+          <div className="flex items-center space-x-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="rounded-full hover:bg-black/5 dark:hover:bg-white/5"
+              title="Add attachment"
+            >
+              <Plus className="h-5 w-5" />
+              <span className="sr-only">Add attachment</span>
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="rounded-full hover:bg-black/5 dark:hover:bg-white/5"
+              title="Tools"
+            >
+              <Wrench className="h-5 w-5" />
+              <span className="sr-only">Tools</span>
+            </Button>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="rounded-full hover:bg-black/5 dark:hover:bg-white/5"
+              title="Voice input"
+            >
+              <Mic className="h-5 w-5" />
+              <span className="sr-only">Voice input</span>
+            </Button>
+            <Button
+              type="submit"
+              size="icon"
+              className="bg-foreground text-background rounded-full shadow-lg hover:bg-foreground/90"
+              disabled={isSendingMessage || !input.trim()}
+            >
+              <ArrowUp className="h-5 w-5" />
+              <span className="sr-only">Send message</span>
+            </Button>
+          </div>
+        </div>
       </div>
     </form>
   );
