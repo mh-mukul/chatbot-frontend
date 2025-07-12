@@ -49,7 +49,7 @@ export function ChatInput({ onSendMessage, isSendingMessage }: ChatInputProps) {
 
   return (
     <form onSubmit={handleSubmit} className="w-full">
-      <div className="bg-muted rounded-2xl p-2 shadow-lg border">
+      <div className="bg-muted rounded-2xl p-2 shadow-lg">
         <Textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -69,7 +69,6 @@ export function ChatInput({ onSendMessage, isSendingMessage }: ChatInputProps) {
               title="Add attachment"
             >
               <Plus className="h-5 w-5" />
-              <span className="sr-only">Add attachment</span>
             </Button>
             <Button
               type="button"
@@ -79,7 +78,6 @@ export function ChatInput({ onSendMessage, isSendingMessage }: ChatInputProps) {
               title="Tools"
             >
               <Wrench className="h-5 w-5" />
-              <span className="sr-only">Tools</span>
             </Button>
           </div>
           <div className="flex items-center space-x-2">
@@ -91,7 +89,6 @@ export function ChatInput({ onSendMessage, isSendingMessage }: ChatInputProps) {
               title="Voice input"
             >
               <Mic className="h-5 w-5" />
-              <span className="sr-only">Voice input</span>
             </Button>
             <Button
               type="submit"
@@ -100,7 +97,6 @@ export function ChatInput({ onSendMessage, isSendingMessage }: ChatInputProps) {
               disabled={isSendingMessage || !input.trim()}
             >
               <ArrowUp className="h-5 w-5" />
-              <span className="sr-only">Send message</span>
             </Button>
           </div>
         </div>
