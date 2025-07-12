@@ -60,3 +60,15 @@ export async function refreshAccessToken(refreshToken: string): Promise<{ access
     return { message: response.message || 'Failed to refresh token' };
   }
 }
+export async function passwordReset(current_password: string, new_password: string): Promise<{ success: boolean; message?: string }> {
+  const response = await apiClient('/api/v1/auth/password-reset', {
+    method: 'POST',
+    body: JSON.stringify({ current_password, new_password }),
+  });
+
+  if (response.status === 200) {
+    return { success: true, message: response.message };
+  } else {
+    return { success: false, message: response.message || 'Password reset failed' };
+  }
+}

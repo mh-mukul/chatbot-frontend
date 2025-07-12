@@ -25,6 +25,10 @@ import {
 } from '@/components/ui/select';
 import { useState } from 'react';
 import { useTheme } from 'next-themes';
+import { PasswordResetModal } from './password-reset-modal';
+import { passwordReset } from '@/api/auth';
+import { useToast } from '@/hooks/use-toast';
+import { redirectToLogin } from '@/lib/auth-utils';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -34,6 +38,26 @@ interface SettingsModalProps {
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState('General');
   const { setTheme, theme } = useTheme();
+  const [isPasswordResetModalOpen, setIsPasswordResetModalOpen] = useState(false);
+  const { toast } = useToast();
+
+  const handlePasswordReset = async (currentPassword: string, newPassword: string) => {
+    const { success, message } = await passwordReset(currentPassword, newPassword);
+    if (success) {
+      toast({
+        title: 'Success',
+        description: message,
+      });
+      setIsPasswordResetModalOpen(false);
+      redirectToLogin();
+    } else {
+      toast({
+        title: 'Error',
+        description: message,
+        variant: 'destructive',
+      });
+    }
+  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -98,7 +122,16 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       case 'Security':
         return <div className="p-4">Security settings will go here.</div>;
       case 'Account':
-        return <div className="p-4">Account settings will go here.</div>;
+        return (
+          <div className="p-4 space-y-4">
+            <h3 className="text-lg font-medium">Account Settings</h3>
+            <div>
+              <Button className="w-full" onClick={() => setIsPasswordResetModalOpen(true)}>
+                Reset Password
+              </Button>
+            </div>
+          </div>
+        );
       default:
         return null;
     }
@@ -106,7 +139,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden">
+      <DialogContent className="w-[90%] h-auto rounded-lg sm:max-w-[700px] p-0 overflow-hidden">
+        <DialogTitle className="sr-only">Settings</DialogTitle>
         <div className="flex flex-col md:flex-row h-full">
           <div className="border-b bg-secondary/20 p-4 md:w-1/3 md:border-b-0 md:border-r">
             <div className="flex items-center justify-between mb-4">
@@ -155,6 +189,11 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           </div>
         </div>
       </DialogContent>
+      <PasswordResetModal
+        isOpen={isPasswordResetModalOpen}
+        onClose={() => setIsPasswordResetModalOpen(false)}
+        onConfirm={handlePasswordReset}
+      />
     </Dialog>
   );
 }
