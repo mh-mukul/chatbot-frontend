@@ -118,16 +118,81 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           </div>
         );
       case 'Personalization':
-        return <div className="p-4">Personalization settings will go here.</div>;
+        return (
+          <div className="p-4 space-y-4">
+            <DialogHeader>
+              <DialogTitle>Personalization</DialogTitle>
+            </DialogHeader>
+            <Separator />
+            <div className="flex items-center justify-between">
+              <Label htmlFor="personalized-recommendations">Personalized Recommendations</Label>
+              <Switch id="personalized-recommendations" defaultChecked />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="data-sharing">Share data for better recommendations</Label>
+              <Switch id="data-sharing" defaultChecked />
+            </div>
+          </div>
+        );
       case 'Security':
-        return <div className="p-4">Security settings will go here.</div>;
+        return (
+          <div className="p-4 space-y-4">
+            <DialogHeader>
+              <DialogTitle>Security</DialogTitle>
+            </DialogHeader>
+            <Separator />
+            <div className="flex items-center justify-between">
+              <Label htmlFor="two-factor-auth">Enable Two-Factor Authentication</Label>
+              <Switch id="two-factor-auth" defaultChecked />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="login-alerts">Login Alerts</Label>
+              <Switch id="login-alerts" defaultChecked />
+            </div>
+          </div>
+        );
       case 'Account':
         return (
           <div className="p-4 space-y-4">
-            <h3 className="text-lg font-medium">Account Settings</h3>
-            <div>
-              <Button className="w-full" onClick={() => setIsPasswordResetModalOpen(true)}>
-                Reset Password
+            <DialogHeader>
+              <DialogTitle>Account</DialogTitle>
+            </DialogHeader>
+            <Separator />
+            <div className="flex items-center justify-between">
+              <Label htmlFor="reset-password">Reset Password</Label>
+              <Button
+              variant="outline"
+              onClick={() => setIsPasswordResetModalOpen(true)}
+              >
+              Reset
+              </Button>
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="delete-account">Delete Account</Label>
+              <Button
+              variant="destructive"
+              onClick={() => {
+                // Handle account deletion logic here
+                toast({
+                title: 'Account Deletion',
+                description: 'This feature is not implemented yet.',
+                variant: 'destructive',
+                });
+              }}
+              >
+              Delete
+              </Button>
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="logout">Logout</Label>
+              <Button
+              variant="secondary"
+              onClick={() => {
+                // Handle logout logic here
+                redirectToLogin();
+              }}
+              >
+              Logout
               </Button>
             </div>
           </div>
@@ -142,16 +207,15 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       <DialogContent className="w-[90%] h-auto rounded-lg sm:max-w-[700px] p-0 overflow-hidden">
         <DialogTitle className="sr-only">Settings</DialogTitle>
         <div className="flex flex-col md:flex-row h-full">
-          <div className="border-b bg-secondary/20 p-4 md:w-1/3 md:border-b-0 md:border-r">
+          <div className="bg-secondary p-4 md:w-1/3">
             <div className="flex items-center justify-between mb-4">
-              {/* <h2 className="text-xl font-semibold">Settings</h2> */}
               <Button className='rounded-full' variant="ghost" size="icon" onClick={onClose}>
                 <X className="h-5 w-5" />
               </Button>
             </div>
             <nav className="flex flex-wrap gap-2 md:flex-col md:gap-0 md:space-y-1">
               <Button
-                variant={activeTab === 'General' ? 'secondary' : 'ghost'}
+                variant={activeTab === 'General' ? 'default' : 'ghost'}
                 className="justify-start md:w-full"
                 onClick={() => setActiveTab('General')}
               >
@@ -159,7 +223,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 General
               </Button>
               <Button
-                variant={activeTab === 'Personalization' ? 'secondary' : 'ghost'}
+                variant={activeTab === 'Personalization' ? 'default' : 'ghost'}
                 className="justify-start md:w-full"
                 onClick={() => setActiveTab('Personalization')}
               >
@@ -167,7 +231,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 Personalization
               </Button>
               <Button
-                variant={activeTab === 'Security' ? 'secondary' : 'ghost'}
+                variant={activeTab === 'Security' ? 'default' : 'ghost'}
                 className="justify-start md:w-full"
                 onClick={() => setActiveTab('Security')}
               >
@@ -175,7 +239,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 Security
               </Button>
               <Button
-                variant={activeTab === 'Account' ? 'secondary' : 'ghost'}
+                variant={activeTab === 'Account' ? 'default' : 'ghost'}
                 className="justify-start md:w-full"
                 onClick={() => setActiveTab('Account')}
               >
