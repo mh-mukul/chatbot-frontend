@@ -161,38 +161,38 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             <div className="flex items-center justify-between">
               <Label htmlFor="reset-password">Reset Password</Label>
               <Button
-              variant="outline"
-              onClick={() => setIsPasswordResetModalOpen(true)}
+                variant="outline"
+                onClick={() => setIsPasswordResetModalOpen(true)}
               >
-              Reset
+                Reset
               </Button>
             </div>
             <div className="flex items-center justify-between">
               <Label htmlFor="delete-account">Delete Account</Label>
               <Button
-              variant="destructive"
-              onClick={() => {
-                // Handle account deletion logic here
-                toast({
-                title: 'Account Deletion',
-                description: 'This feature is not implemented yet.',
-                variant: 'destructive',
-                });
-              }}
+                variant="destructive"
+                onClick={() => {
+                  // Handle account deletion logic here
+                  toast({
+                    title: 'Account Deletion',
+                    description: 'This feature is not implemented yet.',
+                    variant: 'destructive',
+                  });
+                }}
               >
-              Delete
+                Delete
               </Button>
             </div>
             <div className="flex items-center justify-between">
               <Label htmlFor="logout">Logout</Label>
               <Button
-              variant="secondary"
-              onClick={() => {
-                // Handle logout logic here
-                redirectToLogin();
-              }}
+                variant="secondary"
+                onClick={() => {
+                  // Handle logout logic here
+                  redirectToLogin();
+                }}
               >
-              Logout
+                Logout
               </Button>
             </div>
           </div>
@@ -209,7 +209,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         <div className="flex flex-col md:flex-row h-full">
           <div className="bg-secondary p-4 md:w-1/3">
             <div className="flex items-center justify-between mb-4">
-              <Button className='rounded-full' variant="ghost" size="icon" onClick={onClose}>
+              <Button className='rounded-full hover:bg-black/5 dark:hover:bg-white/5' variant="ghost" size="icon" onClick={onClose}>
                 <X className="h-5 w-5" />
               </Button>
             </div>

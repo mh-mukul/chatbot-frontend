@@ -82,7 +82,7 @@ export function PasswordResetModal({
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute top-2 right-4 hover:bg-secondary focus:bg-transparent rounded-full"
+                className="absolute top-2 right-4 hover:bg-black/5 dark:hover:bg-white/5 rounded-full"
                 onClick={handleClose}
               >
                 <X className="h-4 w-4" />
