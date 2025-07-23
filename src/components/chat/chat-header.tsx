@@ -12,7 +12,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import { LoginResponse } from '@/components/chat/types';
 import { useEffect, useState } from 'react';
 import { SettingsModal } from '@/components/chat/settings-modal';
@@ -37,10 +36,7 @@ export function ChatHeader({ onLogout }: ChatHeaderProps) {
   const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : '';
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-10 p-4 bg-background/80 backdrop-blur-sm flex items-center justify-between w-full md:justify-end">
-      <div className="md:hidden">
-        <SidebarTrigger />
-      </div>
+    <header className="flex items-center justify-end w-full p-2">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button

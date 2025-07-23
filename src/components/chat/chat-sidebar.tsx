@@ -18,6 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { ChatHeader } from './chat-header';
 import type { Conversation } from './types';
 
 interface ChatSidebarProps {
@@ -27,6 +28,7 @@ interface ChatSidebarProps {
   onCreateNewChat: () => void;
   onScroll: (event: React.UIEvent<HTMLDivElement>) => void;
   onDeleteChat: (id: string) => void;
+  onLogout: () => void;
 }
 
 export function ChatSidebar({
@@ -36,6 +38,7 @@ export function ChatSidebar({
   onCreateNewChat,
   onScroll,
   onDeleteChat,
+  onLogout,
 }: ChatSidebarProps) {
   const [hoveredChatId, setHoveredChatId] = useState<string | null>(null);
   const { state } = useSidebar();
@@ -115,6 +118,7 @@ export function ChatSidebar({
           </SidebarMenu>
         )}
       </SidebarContent>
+      <ChatHeader onLogout={onLogout} />
     </>
   );
 }

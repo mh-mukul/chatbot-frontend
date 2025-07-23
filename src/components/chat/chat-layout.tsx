@@ -4,11 +4,12 @@ import { Loader2 } from 'lucide-react';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { ChatSidebar } from './chat-sidebar';
 import { ChatThread } from './chat-thread';
-import { ChatHeader } from './chat-header';
 import { ChatWelcomeScreen } from './chat-welcome-screen';
 import { DeleteChatDialog } from './delete-chat-dialog';
 import { useChatManagement } from '@/hooks/use-chat-management';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Button } from '@/components/ui/button';
+import { Share, Ellipsis } from 'lucide-react';
 
 export function ChatLayout() {
   const {
@@ -43,7 +44,6 @@ export function ChatLayout() {
 
   return (
     <SidebarProvider>
-      <ChatHeader onLogout={handleLogout} />
       <Sidebar side="left" collapsible="icon">
         <ChatSidebar
           conversations={conversations}
@@ -52,9 +52,23 @@ export function ChatLayout() {
           onCreateNewChat={handleCreateNewChat}
           onScroll={handleScroll}
           onDeleteChat={handleDeleteChat}
+          onLogout={handleLogout}
         />
       </Sidebar>
       <SidebarInset className={`pt-16 ${isMobile && !activeConversationId ? 'pb-24' : ''}`}>
+        {activeConversationId && (
+          <div className="fixed top-0 right-0 z-10 p-4">
+            <Button variant="ghost" size="icon" className="size-8">
+              <Share className="size-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="size-8 ml-2">
+              <Ellipsis className="size-4" />
+            </Button>
+          </div>
+        )}
+        {/* {activeConversationId && (
+          <div className="border-t" />
+        )} */}
         {isLoadingChatMessages ? (
           <div className="flex h-full items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin" />
