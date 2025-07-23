@@ -1,7 +1,7 @@
 "use client";
 
-import { MoreHorizontal, Trash, Bot, SquarePen, Search } from 'lucide-react';
-import { useState } from 'react';
+import { MoreHorizontal, Trash, Bot, SquarePen, Search, LogOut, Settings } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import {
   SidebarHeader,
   SidebarContent,
@@ -17,9 +17,13 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { ChatHeader } from './chat-header';
-import type { Conversation } from './types';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { SettingsModal } from '@/components/chat/settings-modal';
+import { LogoutConfirmationModal } from '@/components/chat/logout-confirmation-modal';
+import type { Conversation, LoginResponse } from './types';
 
 interface ChatSidebarProps {
   conversations: Conversation[];
@@ -42,6 +46,18 @@ export function ChatSidebar({
 }: ChatSidebarProps) {
   const [hoveredChatId, setHoveredChatId] = useState<string | null>(null);
   const { state } = useSidebar();
+  const [user, setUser] = useState<LoginResponse['data']['user'] | null>(null);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
+  const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : '';
 
   return (
     <>
@@ -118,7 +134,48 @@ export function ChatSidebar({
           </SidebarMenu>
         )}
       </SidebarContent>
-      <ChatHeader onLogout={onLogout} />
+      <div className="flex items-center justify-start w-full p-2 border-t border-border">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="relative h-10 w-full justify-start px-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:px-0"
+            >
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={user?.image_url || ''} alt={user?.name || ''} />
+                <AvatarFallback>{userInitial}</AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col space-y-1 ml-2 overflow-hidden text-left group-data-[collapsible=icon]:hidden">
+                <p className="text-sm font-medium leading-none truncate">{user?.name}</p>
+                <p className="text-xs leading-none text-muted-foreground truncate">
+                  {user?.email}
+                </p>
+              </div>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem onClick={() => setIsSettingsModalOpen(true)}>
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Settings</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setIsLogoutModalOpen(true)}>
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Log out</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      <SettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+      />
+      <LogoutConfirmationModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={onLogout}
+        userEmail={user?.email || null}
+      />
     </>
   );
 }
