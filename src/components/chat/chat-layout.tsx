@@ -10,6 +10,7 @@ import { useChatManagement } from '@/hooks/use-chat-management';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { Share, Ellipsis } from 'lucide-react';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 export function ChatLayout() {
   const {
@@ -56,6 +57,11 @@ export function ChatLayout() {
         />
       </Sidebar>
       <SidebarInset className={`pt-16 ${isMobile && !activeConversationId ? 'pb-24' : ''}`}>
+        {isMobile && (
+          <div className="fixed left-4 top-4 z-10">
+            <SidebarTrigger />
+          </div>
+        )}
         {activeConversationId && (
           <div className="fixed top-0 right-0 z-10 p-4">
             <Button variant="ghost" size="icon" className="size-8">
@@ -66,9 +72,6 @@ export function ChatLayout() {
             </Button>
           </div>
         )}
-        {/* {activeConversationId && (
-          <div className="border-t" />
-        )} */}
         {isLoadingChatMessages ? (
           <div className="flex h-full items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin" />
