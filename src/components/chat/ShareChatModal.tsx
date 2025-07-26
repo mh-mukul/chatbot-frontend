@@ -63,8 +63,8 @@ export function ShareChatModal({ sessionId }: ShareChatModalProps) {
           <Share className="size-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
+      <DialogContent className="w-[90%] h-auto rounded-lg sm:max-w-[550px] p-0 overflow-hidden">
+        <DialogHeader className="p-4">
           <DialogTitle>{isLinkCreated ? "Public link is created" : "Share Chat"}</DialogTitle>
           <DialogDescription>
             {isLinkCreated
@@ -72,34 +72,37 @@ export function ShareChatModal({ sessionId }: ShareChatModalProps) {
               : "Share this chat with others by creating a public link."}
           </DialogDescription>
         </DialogHeader>
-        <div className="rounded-lg bg-muted p-4 flex items-center gap-2">
-          <Info className="text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">
-            This conversation may include personal information. Take a moment to check the content before sharing the link.
-          </p>
-        </div>
-        <div className="mt-4 flex items-center gap-2">
-          <Input
-            value={shareLink}
-            placeholder={placeholder}
-            disabled
-            className="truncate"
-          />
-          {!isLinkCreated ? (
-            <Button onClick={handleCreateLink} disabled={!sessionId}>
-              <Link className="size-4" />
-              Create link
-            </Button>
-          ) : (
-            <Button onClick={handleCopyLink}>
-              <Link className="size-4" />
-              Copy link
-            </Button>
+        <div className="p-4 pt-0">
+          <div className="rounded-lg bg-muted p-4 flex items-center gap-2">
+            <Info className="size-4 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              <b>This conversation may include personal information.</b> 
+              <br />Take a moment to check the content before sharing the link.
+            </p>
+          </div>
+          <div className="mt-4 flex items-center gap-2">
+            <Input
+              value={shareLink}
+              placeholder={placeholder}
+              disabled
+              className="truncate"
+            />
+            {!isLinkCreated ? (
+              <Button onClick={handleCreateLink} disabled={!sessionId}>
+                <Link className="size-4" />
+                Create link
+              </Button>
+            ) : (
+              <Button onClick={handleCopyLink}>
+                <Link className="size-4" />
+                Copy link
+              </Button>
+            )}
+          </div>
+          {isLinkCreated && (
+            <></>
           )}
         </div>
-        {isLinkCreated && (
-          <></>
-        )}
         <DialogClose asChild>
           <Button className='absolute top-2 right-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5' variant="ghost" size="icon">
             <X className="h-5 w-5" />

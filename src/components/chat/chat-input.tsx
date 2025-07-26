@@ -101,6 +101,9 @@ export function ChatInput({ onSendMessage, isSendingMessage }: ChatInputProps) {
           </div>
         </div>
       </div>
+      <div className="text-xs  mt-2 text-center">
+        AI can make mistakes. Always verify important info.
+      </div>
     </form>
   );
 }

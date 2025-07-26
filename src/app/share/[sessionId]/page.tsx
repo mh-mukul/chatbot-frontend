@@ -55,13 +55,19 @@ export default function SharedChatPage() {
 
   return (
     <div className="flex flex-col h-screen">
+      <div className="flex items-center justify-between p-4 border-b">
+        <h1 className="text-xl font-semibold">Shared Chat</h1>
+        <Button onClick={() => router.push('/chat')} variant="outline">
+          Back to Chats
+        </Button>
+      </div>
       <div className="flex-1 overflow-y-auto p-4">
         {messages.map((message) => (
           <ChatMessage key={message.id} message={message} onSendMessage={() => Promise.resolve()} isPublic={true} />
         ))}
       </div>
-      <div className="p-4 border-t">
-        <Button onClick={() => router.push('/chat')} className="w-full">
+      <div className="p-4 border-t items-center flex justify-center">
+        <Button onClick={() => router.push('/chat')} className="w-[60%]">
           Continue to Chats
         </Button>
       </div>
