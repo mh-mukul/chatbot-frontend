@@ -11,6 +11,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { Share, Ellipsis } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { ShareChatModal } from './ShareChatModal';
 
 export function ChatLayout() {
   const {
@@ -64,9 +65,7 @@ export function ChatLayout() {
         )}
         {activeConversationId && (
           <div className="fixed top-0 right-0 z-10 p-4">
-            <Button variant="ghost" size="icon" className="size-8">
-              <Share className="size-4" />
-            </Button>
+            <ShareChatModal sessionId={activeConversationId} />
             <Button variant="ghost" size="icon" className="size-8 ml-2">
               <Ellipsis className="size-4" />
             </Button>

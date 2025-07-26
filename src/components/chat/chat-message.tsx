@@ -13,9 +13,10 @@ import { useToast } from "@/hooks/use-toast";
 interface ChatMessageProps {
   message: Message;
   onSendMessage: (input: string) => Promise<void>;
+  isPublic?: boolean;
 }
 
-export function ChatMessage({ message, onSendMessage }: ChatMessageProps) {
+export function ChatMessage({ message, onSendMessage, isPublic = false }: ChatMessageProps) {
   const isAssistant = message.role === "assistant";
   const [isHovered, setIsHovered] = useState(false);
   const { toast } = useToast();
@@ -132,15 +133,19 @@ export function ChatMessage({ message, onSendMessage }: ChatMessageProps) {
               <Button variant="ghost" size="icon" onClick={onCopy} title="Copy">
                 <Copy className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" onClick={onLike} title="Like">
-                <ThumbsUp className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={onUnlike} title="Dislike">
-                <ThumbsDown className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={onResubmit} title="Resubmit">
-                <RefreshCw className="h-4 w-4" />
-              </Button>
+              {!isPublic && (
+                <>
+                  <Button variant="ghost" size="icon" onClick={onLike} title="Like">
+                    <ThumbsUp className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={onUnlike} title="Dislike">
+                    <ThumbsDown className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={onResubmit} title="Resubmit">
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
             </div>
           )}
         </div>

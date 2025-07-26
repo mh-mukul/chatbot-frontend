@@ -1,5 +1,7 @@
 services:
   web:
+    image: chatbot_frontend
+    container_name: chatbot_frontend
     build: .
     environment:
       - NODE_ENV=production

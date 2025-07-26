@@ -1,3 +1,4 @@
+import { publicApiClient } from '@/lib/public-api-client';
 import { apiClient } from '@/lib/api-client';
 import { Chat, ChatData, Pagination } from '@/components/chat/types';
 
@@ -95,5 +96,17 @@ export async function sendMessage(query: string, sessionId?: string) {
   return apiClient<SendMessageResponseData>(`/api/v1/chat`, {
     method: 'POST',
     body: JSON.stringify(requestBody),
+  });
+}
+
+export async function shareChat(sessionId: string) {
+  return apiClient<any>(`/api/v1/chat/share/${sessionId}`, {
+    method: 'POST',
+  });
+}
+
+export async function fetchSharedChat(sessionId: string) {
+  return publicApiClient<Chat[]>(`/api/v1/chat/share/${sessionId}`, {
+    method: 'GET',
   });
 }
