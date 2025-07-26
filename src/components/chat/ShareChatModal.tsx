@@ -5,13 +5,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useState } from "react";
-import { Share, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Share, X, Link, Info } from "lucide-react";
 import { shareChat } from "@/api/chat";
 import { useToast } from "@/hooks/use-toast";
 import { DialogClose } from "@radix-ui/react-dialog";
@@ -22,9 +20,15 @@ interface ShareChatModalProps {
 
 export function ShareChatModal({ sessionId }: ShareChatModalProps) {
   const [isLinkCreated, setIsLinkCreated] = useState(false);
-  const [isDiscoverable, setIsDiscoverable] = useState(false);
   const [shareLink, setShareLink] = useState("");
+  const [placeholder, setPlaceholder] = useState("");
   const { toast } = useToast();
+
+  // Set placeholder on component mount
+  useEffect(() => {
+    const baseUrl = window.location.origin;
+    setPlaceholder(`${baseUrl}/share/...`);
+  }, []);
 
   const handleCreateLink = async () => {
     try {
@@ -61,40 +65,45 @@ export function ShareChatModal({ sessionId }: ShareChatModalProps) {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Share public link to chat</DialogTitle>
+          <DialogTitle>{isLinkCreated ? "Public link is created" : "Share Chat"}</DialogTitle>
+          <DialogDescription>
+            {isLinkCreated
+              ? "Copy the link from below and share with others."
+              : "Share this chat with others by creating a public link."}
+          </DialogDescription>
         </DialogHeader>
         <div className="rounded-lg bg-muted p-4 flex items-center gap-2">
-          
-          This conversation may include personal information. Take a moment to check the content before sharing the link.
+          <Info className="text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">
+            This conversation may include personal information. Take a moment to check the content before sharing the link.
+          </p>
         </div>
         <div className="mt-4 flex items-center gap-2">
-          <Input value={shareLink} readOnly className="truncate" />
+          <Input
+            value={shareLink}
+            placeholder={placeholder}
+            disabled
+            className="truncate"
+          />
           {!isLinkCreated ? (
-            <Button onClick={handleCreateLink}>Create link</Button>
+            <Button onClick={handleCreateLink} disabled={!sessionId}>
+              <Link className="size-4" />
+              Create link
+            </Button>
           ) : (
-            <Button onClick={handleCopyLink}>Copy link</Button>
+            <Button onClick={handleCopyLink}>
+              <Link className="size-4" />
+              Copy link
+            </Button>
           )}
         </div>
         {isLinkCreated && (
-          <div className="mt-4 flex items-center">
-            <Checkbox
-              id="discoverable"
-              checked={isDiscoverable}
-              onCheckedChange={(checked) => setIsDiscoverable(typeof checked === 'boolean' ? checked : false)}
-            />
-            <label
-              htmlFor="discoverable"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
-              Make this chat discoverable
-            </label>
-          </div>
+          <></>
         )}
         <DialogClose asChild>
-          <button className="absolute top-4 right-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-            <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
-          </button>
+          <Button className='absolute top-2 right-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5' variant="ghost" size="icon">
+            <X className="h-5 w-5" />
+          </Button>
         </DialogClose>
       </DialogContent>
     </Dialog>
