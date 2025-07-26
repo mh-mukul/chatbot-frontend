@@ -72,7 +72,7 @@ export function ChatMessage({ message, onSendMessage }: ChatMessageProps) {
         <div className={cn("flex flex-col")}>
           {isAssistant ? (
             <div className="flex items-center space-x-2">
-              <div className="text-left text-sm font-bold">Smart Buddy</div>
+              <div className="text-left text-sm font-bold">AI Agent</div>
               <div className="text-left text-xs text-muted-foreground">
                 {isHovered ? (
                   new Date(message.createdAt)
