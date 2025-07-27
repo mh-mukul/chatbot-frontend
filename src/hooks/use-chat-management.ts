@@ -4,7 +4,7 @@ import type { Conversation, Message, Chat, Pagination } from '@/components/chat/
 import { useToast } from '@/hooks/use-toast';
 import { fetchChatHistory, fetchChatMessages, sendMessage, deleteChat } from '@/api/chat';
 import { logout } from '@/api/auth';
-import { clearTokens, getRefreshToken, redirectToLogin, redirectToChat } from '@/lib/auth-utils';
+import { clearTokens, getRefreshToken, redirectToLogin } from '@/lib/auth-utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 export function useChatManagement() {
@@ -18,7 +18,6 @@ export function useChatManagement() {
   const pathname = usePathname();
   const [isClient, setIsClient] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [chatHistory, setChatHistory] = useState<Chat[]>([]); // This state might be redundant after refactoring conversations
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isLoadingChatMessages, setIsLoadingChatMessages] = useState(false);
@@ -127,19 +126,13 @@ export function useChatManagement() {
       const response = await fetchChatHistory(page, isMobileRef.current ? 20 : 30);
 
       if (response.status === 200 && response.data) {
-        setChatHistory(prevHistory => [...prevHistory, ...response.data?.chats || []]);
         setPagination(response.data.pagination);
 
-        const newConversations: Conversation[] = response.data.chats.map((chat: Chat) => ({
-          id: chat.session_id,
-          title: chat.message.content,
-          messages: [{
-            id: chat.id.toString(),
-            role: chat.message.type === 'human' ? 'user' : 'assistant',
-            content: chat.message.content,
-            createdAt: new Date(chat.date_time).getTime(),
-          }],
-          date_time: chat.date_time,
+        const newConversations: Conversation[] = response.data.sessions.map((session) => ({
+          id: session.session_id,
+          title: session.title,
+          messages: [],
+          date_time: session.date_time,
         }));
 
         setConversations(prevConversations => {

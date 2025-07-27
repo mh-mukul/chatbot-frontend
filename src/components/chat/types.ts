@@ -11,7 +11,7 @@ export interface Message {
 
 export interface Conversation {
   id: string;
-  title: string;
+  title: string | null;
   messages: Message[];
   date_time?: string;
 }
@@ -39,15 +39,23 @@ export interface Pagination {
   next_page_url: string | null;
 }
 
-export interface ChatData {
-  chats: Chat[];
+export interface Session {
+  session_id: string;
+  title: string | null;
+  user_id: number;
+  date_time: string;
+  shared_to_public: boolean;
+}
+
+export interface ChatHistory {
+  sessions: Session[];
   pagination: Pagination;
 }
 
 export interface ChatHistoryResponse {
   status: number;
   message: string;
-  data: ChatData;
+  data: ChatHistory;
 }
 
 export interface User {

@@ -1,6 +1,6 @@
 import { publicApiClient } from '@/lib/public-api-client';
 import { apiClient } from '@/lib/api-client';
-import { Chat, ChatData, Pagination } from '@/components/chat/types';
+import { Chat, ChatHistory } from '@/components/chat/types';
 
 interface SendMessageResponseData {
   session_id: string;
@@ -10,7 +10,7 @@ interface SendMessageResponseData {
 
 // Simple in-memory cache
 const chatCache: {
-  chatHistory?: { data: ChatData; timestamp: number };
+  chatHistory?: { data: ChatHistory; timestamp: number };
   chatMessages: { [sessionId: string]: { data: Chat[]; timestamp: number } };
 } = {
   chatMessages: {}
@@ -28,7 +28,7 @@ export async function fetchChatHistory(page: number = 1, limit: number = 50) {
     }
   }
 
-  const response = await apiClient<ChatData>(`/api/v1/chat?page=${page}&limit=${limit}`, {
+  const response = await apiClient<ChatHistory>(`/api/v1/chat?page=${page}&limit=${limit}`, {
     method: 'GET',
   });
 
