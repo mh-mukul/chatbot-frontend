@@ -9,7 +9,7 @@ import { DeleteChatDialog } from './delete-chat-dialog';
 import { useChatManagement } from '@/hooks/use-chat-management';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
-import { Share, Ellipsis } from 'lucide-react';
+import { Ellipsis } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { ShareChatModal } from './ShareChatModal';
 

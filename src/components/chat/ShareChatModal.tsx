@@ -59,8 +59,9 @@ export function ShareChatModal({ sessionId }: ShareChatModalProps) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="size-8">
+        <Button variant="ghost">
           <Share className="size-4" />
+          <span >Share</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="w-[90%] h-auto rounded-lg sm:max-w-[550px] p-0 overflow-hidden">
@@ -76,7 +77,7 @@ export function ShareChatModal({ sessionId }: ShareChatModalProps) {
           <div className="rounded-lg bg-muted p-4 flex items-center gap-2">
             <Info className="size-4 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">
-              <b>This conversation may include personal information.</b> 
+              <b>This conversation may include personal information.</b>
               <br />Take a moment to check the content before sharing the link.
             </p>
           </div>

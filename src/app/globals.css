@@ -43,7 +43,7 @@
     --sidebar-ring: 215 23% 59%;
   }
   .dark {
-    --background: 0 0% 0%; /* Pure black */
+    --background: 0 0% 7%;
     --foreground: 210 20% 98%;
     --card: 0 0% 5%; /* Slightly lighter than background */
     --card-foreground: 210 20% 98%;
@@ -67,7 +67,7 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-    --sidebar-background: 0 0% 7%; /* Slightly lighter sidebar */
+    --sidebar-background: 0 0% 0%; /* Pure black */
     --sidebar-foreground: 210 20% 98%;
     --sidebar-primary: 210 20% 98%;
     --sidebar-primary-foreground: 222.2 47.4% 11.2%;

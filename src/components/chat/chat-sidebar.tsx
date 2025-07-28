@@ -83,7 +83,7 @@ export function ChatSidebar({
             onClick={onCreateNewChat}
           >
             <Search size={16} />
-            <span className="group-data-[collapsible=icon]:hidden">Search Chat</span>
+            <span className="group-data-[collapsible=icon]:hidden">Search Chats</span>
           </Button>
         </div>
         {state === 'expanded' && (
@@ -134,7 +134,7 @@ export function ChatSidebar({
           </SidebarMenu>
         )}
       </SidebarContent>
-      <div className="flex items-center justify-start w-full p-2 border-t border-border">
+      <div className="flex items-center justify-start w-full p-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
