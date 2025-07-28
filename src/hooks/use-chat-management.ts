@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import type { Conversation, Message, Chat, Pagination } from '@/components/chat/types';
 import { useToast } from '@/hooks/use-toast';
-import { fetchChatHistory, fetchChatMessages, sendMessage, deleteChat } from '@/api/chat';
+import { fetchChatHistory, fetchChatMessages, sendMessage, deleteChat, getChatTitle } from '@/api/chat';
 import { logout } from '@/api/auth';
 import { clearTokens, getRefreshToken, redirectToLogin } from '@/lib/auth-utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -324,7 +324,7 @@ export function useChatManagement() {
           } else {
             const newConversation: Conversation = {
               id: newSessionId,
-              title: input.substring(0, 50) + (input.length > 50 ? '...' : ''),
+              title: 'New Chat',
               messages: [userMessage, newAssistantMessage],
               date_time: new Date().toISOString(),
             };
@@ -336,7 +336,24 @@ export function useChatManagement() {
           setActiveConversationId(newSessionId);
           router.push(`/chat/${newSessionId}`);
         }
-
+        
+        if (!activeConversationId) {
+          try {
+            const titleResponse = await getChatTitle(input, newSessionId);
+            if (titleResponse.status === 200 && titleResponse.data) {
+              setConversations(prevConversations => {
+                const updatedConversations = [...prevConversations];
+                const conversationIndex = updatedConversations.findIndex(conv => conv.id === newSessionId);
+                if (conversationIndex > -1) {
+                  updatedConversations[conversationIndex].title = titleResponse.data.title;
+                }
+                return updatedConversations;
+              });
+            }
+          } catch (error) {
+            console.error("Error fetching chat title:", error);
+          }
+        }
       } else {
         toast({
           variant: "destructive",

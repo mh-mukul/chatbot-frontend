@@ -50,7 +50,7 @@ export async function deleteChat(sessionId: string) {
     chatCache.chatHistory = undefined;
   }
 
-  return apiClient<any>(`/api/v1/chat/${sessionId}`, { // Type can be more specific if backend provides a response
+  return apiClient<any>(`/api/v1/chat?session_id=${sessionId}`, { // Type can be more specific if backend provides a response
     method: 'DELETE',
   });
 }
@@ -64,7 +64,7 @@ export async function fetchChatMessages(sessionId: string) {
     }
   }
 
-  const response = await apiClient<Chat[]>(`/api/v1/chat/${sessionId}`, {
+  const response = await apiClient<Chat[]>(`/api/v1/chat/session?session_id=${sessionId}`, {
     method: 'GET',
   });
 
@@ -108,5 +108,17 @@ export async function shareChat(sessionId: string) {
 export async function fetchSharedChat(sessionId: string) {
   return publicApiClient<Chat[]>(`/api/v1/chat/share/${sessionId}`, {
     method: 'GET',
+  });
+}
+
+export async function getChatTitle(user_message: string, session_id: string) {
+  const requestBody = {
+    user_message,
+    session_id,
+  };
+
+  return apiClient<any>(`/api/v1/chat/title`, {
+    method: 'POST',
+    body: JSON.stringify(requestBody),
   });
 }
