@@ -86,9 +86,9 @@ export function ChatMessage({ message, onSendMessage, isPublic = false }: ChatMe
                       hour12: true,
                     })
                     .replace(",", "")
-                ) : message.chat_metadata?.duration ? (
+                ) : message.duration ? (
                   `Thought for ${formatDuration(
-                    message.chat_metadata.duration
+                    message.duration
                   )} seconds`
                 ) : null}
               </div>

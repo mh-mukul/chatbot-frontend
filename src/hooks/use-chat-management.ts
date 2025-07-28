@@ -62,10 +62,10 @@ export function useChatManagement() {
       if (response.status === 200 && response.data) {
         const fetchedMessages: Message[] = response.data.map((chat: Chat) => ({
           id: chat.id.toString(),
-          role: chat.message.type === 'human' ? 'user' : 'assistant',
-          content: chat.message.content,
+          role: chat.type === 'human' ? 'user' : 'assistant',
+          content: chat.message,
           createdAt: new Date(chat.date_time).getTime(),
-          chat_metadata: chat.chat_metadata,
+          duration: chat.duration ?? undefined,
         }));
         setActiveChatMessages(fetchedMessages);
       } else {
@@ -296,7 +296,7 @@ export function useChatManagement() {
               content: assistantResponseContent,
               isGenerating: false,
               createdAt: Date.now(),
-              chat_metadata: { duration: assistantResponseDuration }
+              duration: assistantResponseDuration
             }
             : msg
         ));
@@ -308,7 +308,7 @@ export function useChatManagement() {
             role: 'assistant',
             content: assistantResponseContent,
             createdAt: Date.now(),
-            chat_metadata: { duration: assistantResponseDuration },
+            duration: assistantResponseDuration,
           };
 
           if (existingConversationIndex > -1) {

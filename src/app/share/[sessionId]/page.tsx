@@ -25,10 +25,10 @@ export default function SharedChatPage() {
         if (response.status === 200 && response.data) {
           const formattedMessages: Message[] = response.data.map((chatItem) => ({
             id: chatItem.id.toString(),
-            role: (chatItem.message.type === 'human' ? 'user' : 'assistant') as 'user' | 'assistant',
-            content: chatItem.message.content,
+            role: (chatItem.type === 'human' ? 'user' : 'assistant'),
+            content: chatItem.message,
             createdAt: new Date(chatItem.date_time).getTime(),
-            chat_metadata: chatItem.chat_metadata,
+            duration: chatItem.duration ?? undefined,
           }));
           setMessages(formattedMessages);
         } else {

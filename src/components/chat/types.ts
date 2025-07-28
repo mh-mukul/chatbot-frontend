@@ -4,9 +4,7 @@ export interface Message {
   content: string;
   isGenerating?: boolean;
   createdAt: number;
-  chat_metadata?: {
-    duration?: number;
-  };
+  duration?: number;
 }
 
 export interface Conversation {
@@ -16,18 +14,13 @@ export interface Conversation {
   date_time?: string;
 }
 
-export interface ChatMessageContent {
-  type: 'human' | 'ai';
-  content: string;
-}
-
 export interface Chat {
   id: number;
   session_id: string;
-  user_id: number;
-  message: ChatMessageContent;
+  type: 'human' | 'ai';
+  message: string;
   date_time: string;
-  chat_metadata: Record<string, any>;
+  duration: number | null;
 }
 
 export interface Pagination {

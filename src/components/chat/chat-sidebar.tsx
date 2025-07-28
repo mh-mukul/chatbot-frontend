@@ -103,7 +103,7 @@ export function ChatSidebar({
                   className="w-full justify-start group-data-[collapsible=icon]:justify-center relative pr-10"
                 >
                   <span className="truncate group-data-[collapsible=icon]:hidden p-1">
-                    {conv.title || 'New message'}
+                    {conv.title || 'New Chat'}
                   </span>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
