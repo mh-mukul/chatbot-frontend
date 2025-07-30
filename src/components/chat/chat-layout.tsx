@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Ellipsis } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { ShareChatModal } from './ShareChatModal';
+import { Separator } from '@/components/ui/separator';
 
 export function ChatLayout() {
   const {
@@ -66,7 +67,7 @@ export function ChatLayout() {
         {activeConversationId && (
           <div className="fixed top-0 right-0 z-10 p-4">
             <ShareChatModal sessionId={activeConversationId} />
-            <Button variant="ghost" size="icon" className="size-8 ml-2">
+            <Button variant="ghost">
               <Ellipsis className="size-4" />
             </Button>
           </div>

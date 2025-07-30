@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   title: 'Chatbot',
   description: 'Your intelligent assistant',
   icons: {
-    icon: '/favicon.svg',
+    icon: '/favicon.ico',
   },
 };
 

@@ -59,7 +59,7 @@ export function ShareChatModal({ sessionId }: ShareChatModalProps) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="ghost">
+        <Button variant="ghost"  className="ml-2">
           <Share className="size-4" />
           <span >Share</span>
         </Button>

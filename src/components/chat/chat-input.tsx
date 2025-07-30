@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, Plus, Mic, Wrench } from 'lucide-react';
+import { ArrowUp, Plus, Mic, Globe } from 'lucide-react';
 
 interface ChatInputProps {
   onSendMessage: (input: string) => Promise<void>;
@@ -59,7 +59,7 @@ export function ChatInput({ onSendMessage, isSendingMessage }: ChatInputProps) {
           className="bg-transparent w-full text-foreground placeholder-muted-foreground focus:outline-none resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
           disabled={isSendingMessage}
         />
-        <div className="flex justify-between items-center mt-0">
+        <div className="flex justify-between items-center mt-1">
           <div className="flex items-center space-x-2">
             <Button
               type="button"
@@ -75,9 +75,9 @@ export function ChatInput({ onSendMessage, isSendingMessage }: ChatInputProps) {
               variant="ghost"
               size="icon"
               className="rounded-full hover:bg-black/5 dark:hover:bg-white/5"
-              title="Tools"
+              title="Web Search"
             >
-              <Wrench className="h-5 w-5" />
+              <Globe className="h-5 w-5" />
             </Button>
           </div>
           <div className="flex items-center space-x-2">
