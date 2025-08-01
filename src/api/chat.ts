@@ -3,8 +3,11 @@ import { apiClient } from '@/lib/api-client';
 import { Chat, ChatHistory } from '@/components/chat/types';
 
 interface SendMessageResponseData {
+  id: number;
   session_id: string;
-  response: string;
+  human_message: string;
+  ai_message: string;
+  date_time: string;
   duration: number;
 }
 
@@ -120,5 +123,33 @@ export async function getChatTitle(user_message: string, session_id: string) {
   return apiClient<any>(`/api/v1/chat/title`, {
     method: 'POST',
     body: JSON.stringify(requestBody),
+  });
+}
+
+export async function sendPositiveFeedback(messageId: number) {
+  // Invalidate cache for chat history when sending feedback
+  chatCache.chatHistory = undefined;
+
+  return apiClient<any>(`/api/v1/chat/feedback`, {
+    method: 'POST',
+    body: JSON.stringify({
+      id: messageId,
+      positive_feedback: true,
+      negative_feedback: false,
+    }),
+  });
+}
+
+export async function sendNegativeFeedback(messageId: number) {
+  // Invalidate cache for chat history when sending feedback
+  chatCache.chatHistory = undefined;
+
+  return apiClient<any>(`/api/v1/chat/feedback`, {
+    method: 'POST',
+    body: JSON.stringify({
+      id: messageId,
+      positive_feedback: false,
+      negative_feedback: true,
+    }),
   });
 }

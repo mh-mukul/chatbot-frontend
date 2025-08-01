@@ -5,6 +5,9 @@ export interface Message {
   isGenerating?: boolean;
   createdAt: number;
   duration?: number;
+  originalId?: number; // To keep track of the original message ID for feedback
+  positiveFeedback?: boolean;
+  negativeFeedback?: boolean;
 }
 
 export interface Conversation {
@@ -17,10 +20,12 @@ export interface Conversation {
 export interface Chat {
   id: number;
   session_id: string;
-  type: 'human' | 'ai';
-  message: string;
+  human_message: string;
+  ai_message: string;
   date_time: string;
-  duration: number | null;
+  duration: number;
+  positive_feedback: boolean;
+  negative_feedback: boolean;
 }
 
 export interface Pagination {

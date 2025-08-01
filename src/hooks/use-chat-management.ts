@@ -60,13 +60,32 @@ export function useChatManagement() {
       const response = await fetchChatMessages(sessionId);
 
       if (response.status === 200 && response.data) {
-        const fetchedMessages: Message[] = response.data.map((chat: Chat) => ({
-          id: chat.id.toString(),
-          role: chat.type === 'human' ? 'user' : 'assistant',
-          content: chat.message,
-          createdAt: new Date(chat.date_time).getTime(),
-          duration: chat.duration ?? undefined,
-        }));
+        // Convert each chat entry (which now contains both human and AI messages) into separate messages
+        const fetchedMessages: Message[] = [];
+
+        response.data.forEach((chat: Chat) => {
+          // Add the human message
+          fetchedMessages.push({
+            id: `${chat.id}-human`,
+            role: 'user',
+            content: chat.human_message,
+            createdAt: new Date(chat.date_time).getTime(),
+            originalId: chat.id,
+          });
+
+          // Add the AI message
+          fetchedMessages.push({
+            id: `${chat.id}-ai`,
+            role: 'assistant',
+            content: chat.ai_message,
+            createdAt: new Date(chat.date_time).getTime() + 1, // Add 1ms to ensure correct ordering
+            duration: chat.duration,
+            originalId: chat.id,
+            positiveFeedback: chat.positive_feedback,
+            negativeFeedback: chat.negative_feedback,
+          });
+        });
+
         setActiveChatMessages(fetchedMessages);
       } else {
         toast({
@@ -284,8 +303,9 @@ export function useChatManagement() {
 
       if (response.status === 200 && response.data) {
         const newSessionId = response.data.session_id;
-        const assistantResponseContent = response.data.response;
+        const assistantResponseContent = response.data.ai_message;
         const assistantResponseDuration = response.data.duration;
+        const messageId = response.data.id;
 
         setCurrentSessionId(newSessionId);
 
@@ -296,7 +316,8 @@ export function useChatManagement() {
               content: assistantResponseContent,
               isGenerating: false,
               createdAt: Date.now(),
-              duration: assistantResponseDuration
+              duration: assistantResponseDuration,
+              originalId: messageId
             }
             : msg
         ));
@@ -309,6 +330,7 @@ export function useChatManagement() {
             content: assistantResponseContent,
             createdAt: Date.now(),
             duration: assistantResponseDuration,
+            originalId: messageId,
           };
 
           if (existingConversationIndex > -1) {
@@ -336,7 +358,7 @@ export function useChatManagement() {
           setActiveConversationId(newSessionId);
           router.push(`/chat/${newSessionId}`);
         }
-        
+
         if (!activeConversationId) {
           try {
             const titleResponse = await getChatTitle(input, newSessionId);

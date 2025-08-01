@@ -9,6 +9,7 @@ import { Card, CardContent } from "../ui/card";
 import { useState } from "react";
 import { Button } from "../ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { sendPositiveFeedback, sendNegativeFeedback } from "@/api/chat";
 
 interface ChatMessageProps {
   message: Message;
@@ -32,14 +33,46 @@ export function ChatMessage({ message, onSendMessage, isPublic = false }: ChatMe
     });
   };
 
-  const onLike = () => {
-    // TODO: Implement backend API call
-    console.log("Liked message");
+  const onLike = async () => {
+    if (!message.originalId) return;
+
+    try {
+      await sendPositiveFeedback(message.originalId);
+      toast({
+        description: "Thank you for your feedback.",
+      });
+      // Update local state
+      message.positiveFeedback = true;
+      message.negativeFeedback = false;
+    } catch (error) {
+      console.error("Error sending positive feedback:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to submit feedback.",
+      });
+    }
   };
 
-  const onUnlike = () => {
-    // TODO: Implement backend API call
-    console.log("Unliked message");
+  const onUnlike = async () => {
+    if (!message.originalId) return;
+
+    try {
+      await sendNegativeFeedback(message.originalId);
+      toast({
+        description: "Thank you for your feedback.",
+      });
+      // Update local state
+      message.positiveFeedback = false;
+      message.negativeFeedback = true;
+    } catch (error) {
+      console.error("Error sending negative feedback:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to submit feedback.",
+      });
+    }
   };
 
   const onResubmit = () => {
@@ -135,10 +168,20 @@ export function ChatMessage({ message, onSendMessage, isPublic = false }: ChatMe
               </Button>
               {!isPublic && (
                 <>
-                  <Button variant="ghost" size="icon" onClick={onLike} title="Like">
+                  <Button
+                    variant={message.positiveFeedback ? "default" : "ghost"}
+                    size="icon"
+                    onClick={onLike}
+                    title="Like"
+                  >
                     <ThumbsUp className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={onUnlike} title="Dislike">
+                  <Button
+                    variant={message.negativeFeedback ? "default" : "ghost"}
+                    size="icon"
+                    onClick={onUnlike}
+                    title="Dislike"
+                  >
                     <ThumbsDown className="h-4 w-4" />
                   </Button>
                   <Button variant="ghost" size="icon" onClick={onResubmit} title="Resubmit">
