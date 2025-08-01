@@ -23,13 +23,26 @@ export default function SharedChatPage() {
         setIsLoading(true);
         const response = await fetchSharedChat(sessionId);
         if (response.status === 200 && response.data) {
-          const formattedMessages: Message[] = response.data.map((chatItem) => ({
-            id: chatItem.id.toString(),
-            role: (chatItem.type === 'human' ? 'user' : 'assistant'),
-            content: chatItem.message,
-            createdAt: new Date(chatItem.date_time).getTime(),
-            duration: chatItem.duration ?? undefined,
-          }));
+          // Create separate messages for human and AI responses
+          const formattedMessages: Message[] = [];
+          response.data.forEach((chatItem) => {
+            // Add human message
+            formattedMessages.push({
+              id: `${chatItem.id}-human`,
+              role: 'user',
+              content: chatItem.human_message,
+              createdAt: new Date(chatItem.date_time).getTime() - 1000, // 1 second before AI message
+            });
+
+            // Add AI message
+            formattedMessages.push({
+              id: `${chatItem.id}-ai`,
+              role: 'assistant',
+              content: chatItem.ai_message,
+              createdAt: new Date(chatItem.date_time).getTime(),
+              duration: chatItem.duration,
+            });
+          });
           setMessages(formattedMessages);
         } else {
           toast({
@@ -61,7 +74,7 @@ export default function SharedChatPage() {
           Back to Chats
         </Button>
       </div>
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 p-4 md:p-6 space-y-6 w-full md:max-w-[80%] md:mx-auto">
         {messages.map((message) => (
           <ChatMessage key={message.id} message={message} onSendMessage={() => Promise.resolve()} isPublic={true} />
         ))}

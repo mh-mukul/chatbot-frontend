@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import { Ellipsis } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { ShareChatModal } from './ShareChatModal';
-import { Separator } from '@/components/ui/separator';
 
 export function ChatLayout() {
   const {
