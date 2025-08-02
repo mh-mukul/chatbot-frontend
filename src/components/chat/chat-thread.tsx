@@ -8,7 +8,7 @@ import { useEffect, useRef } from 'react';
 
 interface ChatThreadProps {
   conversation?: Conversation;
-  onSendMessage: (input: string) => Promise<void>;
+  onSendMessage: (input: string, originalMsgId?: number) => Promise<void>;
   isSendingMessage?: boolean; // Optional prop to indicate if a message is being sent
 }
 

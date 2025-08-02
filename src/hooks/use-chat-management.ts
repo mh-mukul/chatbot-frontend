@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import type { Conversation, Message, Chat, Pagination } from '@/components/chat/types';
 import { useToast } from '@/hooks/use-toast';
-import { fetchChatHistory, fetchChatMessages, sendMessage, deleteChat, getChatTitle } from '@/api/chat';
+import { fetchChatHistory, fetchChatMessages, sendMessage, deleteChat, getChatTitle, resubmitChat } from '@/api/chat';
 import { logout } from '@/api/auth';
 import { clearTokens, getRefreshToken, redirectToLogin } from '@/lib/auth-utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -267,7 +267,7 @@ export function useChatManagement() {
     }
   }, [pagination, isLoadingHistory, fetchChatHistoryHandler]);
 
-  const handleSendMessage = useCallback(async (input: string) => {
+  const handleSendMessage = useCallback(async (input: string, originalMsgId?: number) => {
     if (!isAuthenticated || isSendingMessage) return;
 
     let newSessionId = currentSessionId;
@@ -280,13 +280,48 @@ export function useChatManagement() {
       setActiveConversationId(newSessionId);
     }
 
+    // Find the index of the original message if resubmitting
+    let originalMessageIndex = -1;
+    let originalUserQuery = input;
+
+    if (originalMsgId) {
+      // First check if this is an AI message being resubmitted
+      const aiMessage = activeChatMessages.find(msg =>
+        msg.role === 'assistant' && msg.originalId === originalMsgId
+      );
+
+      // If it's an AI message, we need to find the corresponding user message
+      if (aiMessage) {
+        // Find the user message that came before this AI message
+        const aiMessageIndex = activeChatMessages.findIndex(msg =>
+          msg.role === 'assistant' && msg.originalId === originalMsgId
+        );
+
+        if (aiMessageIndex > 0) {
+          const userMessage = activeChatMessages[aiMessageIndex - 1];
+          if (userMessage && userMessage.role === 'user') {
+            originalMessageIndex = aiMessageIndex - 1;
+            originalUserQuery = userMessage.content;
+          }
+        }
+      } else {
+        // Check if it's a user message being resubmitted
+        originalMessageIndex = activeChatMessages.findIndex(msg =>
+          msg.role === 'user' && msg.originalId === originalMsgId
+        );
+      }
+    }
+
+    // Create user message
     const userMessage: Message = {
       id: Date.now().toString() + '-user',
       role: 'user',
-      content: input,
+      content: originalUserQuery, // Use the original user query if resubmitting
       createdAt: Date.now(),
+      originalId: originalMsgId ? originalMsgId : undefined
     };
 
+    // Create assistant placeholder
     const assistantPlaceholder: Message = {
       id: Date.now().toString() + '-assistant-placeholder',
       role: 'assistant',
@@ -295,11 +330,31 @@ export function useChatManagement() {
       createdAt: Date.now(),
     };
 
-    setActiveChatMessages(prevMessages => [...prevMessages, userMessage, assistantPlaceholder]);
+    // If resubmitting, keep messages up to the user message and remove the rest
+    if (originalMessageIndex !== -1) {
+      setActiveChatMessages(prevMessages => {
+        // Keep messages up to and including the user message being resubmitted
+        const userMessageToKeep = prevMessages[originalMessageIndex];
+        const messagesToKeep = prevMessages.slice(0, originalMessageIndex + 1);
+        // Add the assistant placeholder
+        return [...messagesToKeep, assistantPlaceholder];
+      });
+    } else {
+      // Normal message flow
+      setActiveChatMessages(prevMessages => [...prevMessages, userMessage, assistantPlaceholder]);
+    }
+
     setIsSendingMessage(true);
 
     try {
-      const response = await sendMessage(input, currentSessionId || undefined);
+      let response;
+
+      // If originalMsgId is provided, use resubmitChat API
+      if (originalMsgId && newSessionId) {
+        response = await resubmitChat(originalMsgId, newSessionId, originalUserQuery);
+      } else {
+        response = await sendMessage(input, newSessionId || undefined);
+      }
 
       if (response.status === 200 && response.data) {
         const newSessionId = response.data.session_id;
@@ -322,58 +377,61 @@ export function useChatManagement() {
             : msg
         ));
 
-        setConversations(prevConversations => {
-          const existingConversationIndex = prevConversations.findIndex(conv => conv.id === newSessionId);
-          const newAssistantMessage: Message = {
-            id: Date.now().toString() + '-assistant',
-            role: 'assistant',
-            content: assistantResponseContent,
-            createdAt: Date.now(),
-            duration: assistantResponseDuration,
-            originalId: messageId,
-          };
-
-          if (existingConversationIndex > -1) {
-            const updatedConversations = [...prevConversations];
-            const updatedIndex = updatedConversations.findIndex(conv => conv.id === newSessionId);
-            if (updatedIndex > -1) {
-              const [updatedConversation] = updatedConversations.splice(updatedIndex, 1);
-              updatedConversation.messages.push(userMessage, newAssistantMessage);
-              updatedConversation.date_time = new Date().toISOString();
-              updatedConversations.unshift(updatedConversation);
-            }
-            return updatedConversations;
-          } else {
-            const newConversation: Conversation = {
-              id: newSessionId,
-              title: 'New Chat',
-              messages: [userMessage, newAssistantMessage],
-              date_time: new Date().toISOString(),
+        // Only update conversations list if we're not resubmitting
+        if (!originalMsgId) {
+          setConversations(prevConversations => {
+            const existingConversationIndex = prevConversations.findIndex(conv => conv.id === newSessionId);
+            const newAssistantMessage: Message = {
+              id: Date.now().toString() + '-assistant',
+              role: 'assistant',
+              content: assistantResponseContent,
+              createdAt: Date.now(),
+              duration: assistantResponseDuration,
+              originalId: messageId,
             };
-            return [newConversation, ...prevConversations];
-          }
-        });
 
-        if (!activeConversationId) {
-          setActiveConversationId(newSessionId);
-          router.push(`/chat/${newSessionId}`);
-        }
-
-        if (!activeConversationId) {
-          try {
-            const titleResponse = await getChatTitle(input, newSessionId);
-            if (titleResponse.status === 200 && titleResponse.data) {
-              setConversations(prevConversations => {
-                const updatedConversations = [...prevConversations];
-                const conversationIndex = updatedConversations.findIndex(conv => conv.id === newSessionId);
-                if (conversationIndex > -1) {
-                  updatedConversations[conversationIndex].title = titleResponse.data.title;
-                }
-                return updatedConversations;
-              });
+            if (existingConversationIndex > -1) {
+              const updatedConversations = [...prevConversations];
+              const updatedIndex = updatedConversations.findIndex(conv => conv.id === newSessionId);
+              if (updatedIndex > -1) {
+                const [updatedConversation] = updatedConversations.splice(updatedIndex, 1);
+                updatedConversation.messages.push(userMessage, newAssistantMessage);
+                updatedConversation.date_time = new Date().toISOString();
+                updatedConversations.unshift(updatedConversation);
+              }
+              return updatedConversations;
+            } else {
+              const newConversation: Conversation = {
+                id: newSessionId,
+                title: 'New Chat',
+                messages: [userMessage, newAssistantMessage],
+                date_time: new Date().toISOString(),
+              };
+              return [newConversation, ...prevConversations];
             }
-          } catch (error) {
-            console.error("Error fetching chat title:", error);
+          });
+
+          if (!activeConversationId) {
+            setActiveConversationId(newSessionId);
+            router.push(`/chat/${newSessionId}`);
+          }
+
+          if (!activeConversationId) {
+            try {
+              const titleResponse = await getChatTitle(input, newSessionId);
+              if (titleResponse.status === 200 && titleResponse.data) {
+                setConversations(prevConversations => {
+                  const updatedConversations = [...prevConversations];
+                  const conversationIndex = updatedConversations.findIndex(conv => conv.id === newSessionId);
+                  if (conversationIndex > -1) {
+                    updatedConversations[conversationIndex].title = titleResponse.data.title;
+                  }
+                  return updatedConversations;
+                });
+              }
+            } catch (error) {
+              console.error("Error fetching chat title:", error);
+            }
           }
         }
       } else {
@@ -395,7 +453,7 @@ export function useChatManagement() {
     } finally {
       setIsSendingMessage(false);
     }
-  }, [isAuthenticated, isSendingMessage, currentSessionId, activeConversationId, toast, router]);
+  }, [isAuthenticated, isSendingMessage, currentSessionId, activeConversationId, activeChatMessages, toast, router]);
 
   const activeConversation = conversations.find(c => c.id === activeConversationId);
 

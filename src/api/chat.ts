@@ -153,3 +153,18 @@ export async function sendNegativeFeedback(messageId: number) {
     }),
   });
 }
+
+export async function resubmitChat(chatId: number, sessionId: string, query: string) {
+  // Invalidate cache for the session and history when resubmitting a message
+  delete chatCache.chatMessages[sessionId];
+  chatCache.chatHistory = undefined;
+
+  return apiClient<SendMessageResponseData>(`/api/v1/chat/resubmit`, {
+    method: 'POST',
+    body: JSON.stringify({
+      chat_id: chatId,
+      session_id: sessionId,
+      query: query
+    }),
+  });
+}

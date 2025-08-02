@@ -7,7 +7,7 @@ import { ArrowUp, Plus, Mic, Globe } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 
 interface ChatInputProps {
-  onSendMessage: (input: string) => Promise<void>;
+  onSendMessage: (input: string, originalMsgId?: number) => Promise<void>;
   isSendingMessage: boolean; // New prop to indicate if a message is being sent
 }
 

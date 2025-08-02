@@ -14,7 +14,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/
 
 interface ChatMessageProps {
   message: Message;
-  onSendMessage: (input: string) => Promise<void>;
+  onSendMessage: (input: string, originalMsgId?: number) => Promise<void>;
   isPublic?: boolean;
 }
 
@@ -76,9 +76,21 @@ export function ChatMessage({ message, onSendMessage, isPublic = false }: ChatMe
     }
   };
 
-  const onResubmit = () => {
-    // TODO: Implement backend API call
-    console.log("Resubmitting message");
+  const onResubmit = async () => {
+    if (!message.originalId) return;
+
+    try {
+      // The use-chat-management hook will handle finding the correct user message
+      // and preparing the AI message for resubmission
+      await onSendMessage("", message.originalId);
+    } catch (error) {
+      console.error("Error resubmitting message:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to resubmit message.",
+      });
+    }
   };
 
   return (
@@ -163,17 +175,20 @@ export function ChatMessage({ message, onSendMessage, isPublic = false }: ChatMe
                 </CardContent>
               </Card>
             )}
-            {isAssistant && !message.isGenerating && (
+            {!message.isGenerating && (
               <div className="flex items-center gap-1 mt-2">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" onClick={onCopy}>
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">Copy</TooltipContent>
-                </Tooltip>
-                {!isPublic && (
+                {isAssistant && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" onClick={onCopy}>
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">Copy</TooltipContent>
+                  </Tooltip>
+                )}
+
+                {isAssistant && !isPublic && (
                   <>
                     <Tooltip>
                       <TooltipTrigger asChild>
