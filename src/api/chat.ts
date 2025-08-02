@@ -130,6 +130,24 @@ export async function sendPositiveFeedback(messageId: number) {
   // Invalidate cache for chat history when sending feedback
   chatCache.chatHistory = undefined;
 
+  // Update the message in all session caches
+  Object.keys(chatCache.chatMessages).forEach(sessionId => {
+    const sessionCache = chatCache.chatMessages[sessionId];
+    if (sessionCache && sessionCache.data) {
+      const updatedData = sessionCache.data.map(chat => {
+        if (chat.id === messageId) {
+          return {
+            ...chat,
+            positive_feedback: true,
+            negative_feedback: false
+          };
+        }
+        return chat;
+      });
+      chatCache.chatMessages[sessionId].data = updatedData;
+    }
+  });
+
   return apiClient<any>(`/api/v1/chat/feedback`, {
     method: 'POST',
     body: JSON.stringify({
@@ -143,6 +161,24 @@ export async function sendPositiveFeedback(messageId: number) {
 export async function sendNegativeFeedback(messageId: number) {
   // Invalidate cache for chat history when sending feedback
   chatCache.chatHistory = undefined;
+
+  // Update the message in all session caches
+  Object.keys(chatCache.chatMessages).forEach(sessionId => {
+    const sessionCache = chatCache.chatMessages[sessionId];
+    if (sessionCache && sessionCache.data) {
+      const updatedData = sessionCache.data.map(chat => {
+        if (chat.id === messageId) {
+          return {
+            ...chat,
+            positive_feedback: false,
+            negative_feedback: true
+          };
+        }
+        return chat;
+      });
+      chatCache.chatMessages[sessionId].data = updatedData;
+    }
+  });
 
   return apiClient<any>(`/api/v1/chat/feedback`, {
     method: 'POST',

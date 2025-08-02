@@ -56,10 +56,15 @@ export function ShareChatModal({ sessionId }: ShareChatModalProps) {
     });
   };
 
+  const handleClose = () => {
+    setIsLinkCreated(false);
+    setShareLink("");
+  };
+
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="ghost"  className="ml-2">
+        <Button variant="ghost" className="ml-2">
           <Share className="size-4" />
           <span >Share</span>
         </Button>
@@ -100,12 +105,9 @@ export function ShareChatModal({ sessionId }: ShareChatModalProps) {
               </Button>
             )}
           </div>
-          {isLinkCreated && (
-            <></>
-          )}
         </div>
         <DialogClose asChild>
-          <Button className='absolute top-2 right-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5' variant="ghost" size="icon">
+          <Button onClick={handleClose} className='absolute top-2 right-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5' variant="ghost" size="icon">
             <X className="h-5 w-5" />
           </Button>
         </DialogClose>

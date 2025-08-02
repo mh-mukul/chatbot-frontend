@@ -38,13 +38,22 @@ export function ChatMessage({ message, onSendMessage, isPublic = false }: ChatMe
     if (!message.originalId) return;
 
     try {
+      // Create a copy of the current state before changing
+      const prevPositive = message.positiveFeedback;
+      const prevNegative = message.negativeFeedback;
+
+      // Update local state immediately for responsive UI
+      message.positiveFeedback = true;
+      message.negativeFeedback = false;
+
+      // Force a re-render
+      const updatedMessage = { ...message };
+
+      // Send API request
       await sendPositiveFeedback(message.originalId);
       toast({
         description: "Thank you for your feedback.",
       });
-      // Update local state
-      message.positiveFeedback = true;
-      message.negativeFeedback = false;
     } catch (error) {
       console.error("Error sending positive feedback:", error);
       toast({
@@ -59,13 +68,22 @@ export function ChatMessage({ message, onSendMessage, isPublic = false }: ChatMe
     if (!message.originalId) return;
 
     try {
+      // Create a copy of the current state before changing
+      const prevPositive = message.positiveFeedback;
+      const prevNegative = message.negativeFeedback;
+
+      // Update local state immediately for responsive UI
+      message.positiveFeedback = false;
+      message.negativeFeedback = true;
+
+      // Force a re-render
+      const updatedMessage = { ...message };
+
+      // Send API request
       await sendNegativeFeedback(message.originalId);
       toast({
         description: "Thank you for your feedback.",
       });
-      // Update local state
-      message.positiveFeedback = false;
-      message.negativeFeedback = true;
     } catch (error) {
       console.error("Error sending negative feedback:", error);
       toast({
