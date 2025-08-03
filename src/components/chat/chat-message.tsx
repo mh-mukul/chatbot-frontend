@@ -3,14 +3,14 @@
 import { cn } from "@/lib/utils";
 import type { Message } from "./types";
 import { Avatar } from "@/components/ui/avatar";
-import { Loader2, Copy, ThumbsUp, ThumbsDown, RefreshCw } from "lucide-react";
-import { Icons } from "../icons";
+import { Loader2, Bot, Copy, ThumbsUp, ThumbsDown, RefreshCw, Pen } from "lucide-react";
 import { Card, CardContent } from "../ui/card";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "../ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { sendPositiveFeedback, sendNegativeFeedback } from "@/api/chat";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
+import { ChatInput } from "./chat-input"; // Import ChatInput
 
 interface ChatMessageProps {
   message: Message;
@@ -21,6 +21,7 @@ interface ChatMessageProps {
 export function ChatMessage({ message, onSendMessage, isPublic = false }: ChatMessageProps) {
   const isAssistant = message.role === "assistant";
   const [isHovered, setIsHovered] = useState(false);
+  const [isEditing, setIsEditing] = useState(false); // New state for editing mode
   const { toast } = useToast();
 
   const formatDuration = (duration: number) => {
@@ -32,6 +33,20 @@ export function ChatMessage({ message, onSendMessage, isPublic = false }: ChatMe
     toast({
       description: "Message copied to clipboard.",
     });
+  };
+
+  const onEdit = () => {
+    setIsEditing(true);
+  };
+
+  const onCancelEdit = () => {
+    setIsEditing(false);
+  };
+
+  const onUpdateMessage = async (newContent: string) => {
+    if (!message.originalId) return;
+    await onSendMessage(newContent, message.originalId);
+    setIsEditing(false);
   };
 
   const onLike = async () => {
@@ -124,7 +139,7 @@ export function ChatMessage({ message, onSendMessage, isPublic = false }: ChatMe
         {isAssistant && (
           <Avatar className="h-8 w-8 shrink-0">
             <div className="bg-primary text-primary-foreground flex h-full w-full items-center justify-center rounded-full">
-              <Icons.bot className="h-5 w-5" />
+              <Bot className="h-5 w-5" />
             </div>
           </Avatar>
         )}
@@ -159,7 +174,15 @@ export function ChatMessage({ message, onSendMessage, isPublic = false }: ChatMe
                 </div>
               </div>
             ) : null}
-            {isAssistant ? (
+            {isEditing ? (
+              <ChatInput
+                onSendMessage={onUpdateMessage}
+                isSendingMessage={message.isGenerating || false}
+                initialInput={message.content}
+                onCancel={onCancelEdit}
+                isEditing={true}
+              />
+            ) : isAssistant ? (
               <div className="text-sm pt-2">
                 {message.isGenerating ? (
                   <div className="flex items-center gap-2">
@@ -204,6 +227,32 @@ export function ChatMessage({ message, onSendMessage, isPublic = false }: ChatMe
                     </TooltipTrigger>
                     <TooltipContent side="bottom">Copy</TooltipContent>
                   </Tooltip>
+                )}
+
+                {!isAssistant && (
+                  <div
+                    className={cn(
+                      "flex items-center gap-1 transition-opacity duration-300",
+                      isHovered ? "opacity-100" : "opacity-0"
+                    )}
+                  >
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" onClick={onCopy}>
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">Copy</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" onClick={onEdit}>
+                          <Pen className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">Edit</TooltipContent>
+                    </Tooltip>
+                  </div>
                 )}
 
                 {isAssistant && !isPublic && (
