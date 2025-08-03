@@ -121,7 +121,7 @@ export function ChatSidebar({
                           e.stopPropagation();
                           onDeleteChat(conv.id);
                         }}
-                        className="flex items-center gap-2 bg-destructive text-destructive-foreground hover:bg-destructive/90 focus:bg-destructive/90 focus:text-destructive-foreground"
+                        className="text-red-500 dark:text-red-500 focus:text-red-500 dark:focus:text-red-500 focus:bg-red-300 dark:focus:bg-red-900/50"
                       >
                         <Trash size={16} />
                         Delete

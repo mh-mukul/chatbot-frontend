@@ -146,8 +146,9 @@ export function ChatMessage({ message, onSendMessage, isPublic = false }: ChatMe
 
         <div
           className={cn(
-            "flex flex-col gap-2 max-w-[80%]",
-            isAssistant ? "items-start" : "items-end"
+            "flex flex-col gap-2",
+            isEditing ? "w-full" : "max-w-[80%]",
+            isAssistant ? "items-start" : (isEditing ? "" : "items-end")
           )}
         >
           <div className={cn("flex flex-col")}>

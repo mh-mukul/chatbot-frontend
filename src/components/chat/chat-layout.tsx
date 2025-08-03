@@ -9,7 +9,13 @@ import { DeleteChatDialog } from './delete-chat-dialog';
 import { useChatManagement } from '@/hooks/use-chat-management';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
-import { Ellipsis } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Ellipsis, Archive, Flag, Trash } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { ShareChatModal } from './ShareChatModal';
 
@@ -66,9 +72,30 @@ export function ChatLayout() {
         {activeConversationId && (
           <div className="fixed top-0 right-0 z-10 p-4">
             <ShareChatModal sessionId={activeConversationId} />
-            <Button variant="ghost">
-              <Ellipsis className="size-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost">
+                  <Ellipsis className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem>
+                  <Archive />
+                  <span>Archive</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Flag />
+                  <span>Report</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-red-500 dark:text-red-500 focus:text-red-500 dark:focus:text-red-500 focus:bg-red-300 dark:focus:bg-red-900/50"
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                >
+                  <Trash className="text-red-500 dark:text-red-500" />
+                  <span>Delete</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         )}
         {isLoadingChatMessages ? (
