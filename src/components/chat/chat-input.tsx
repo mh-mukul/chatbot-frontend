@@ -76,9 +76,9 @@ export function ChatInput({
             className="bg-transparent w-full text-foreground placeholder-muted-foreground focus:outline-none resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
             disabled={isSendingMessage}
           />
-          <div className="flex justify-end items-center mt-1">
+          <div className="flex justify-between items-center mt-1">
             {isEditing ? (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 ml-auto">
                 <Button
                   type="button"
                   variant="ghost"
@@ -97,60 +97,65 @@ export function ChatInput({
                 </Button>
               </div>
             ) : (
-              <div className="flex items-center space-x-2">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="rounded-full hover:bg-black/5 dark:hover:bg-white/5"
-                    >
-                      <Plus className="h-5 w-5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">Attachments</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="rounded-full hover:bg-black/5 dark:hover:bg-white/5"
-                    >
-                      <Globe className="h-5 w-5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">Web Search</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="rounded-full hover:bg-black/5 dark:hover:bg-white/5"
-                    >
-                      <Mic className="h-5 w-5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">Voice input</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type="submit"
-                      size="icon"
-                      className="bg-foreground text-background rounded-full shadow-lg hover:bg-foreground/90"
-                      disabled={isSendingMessage || !input.trim()}
-                    >
-                      <ArrowUp className="h-5 w-5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">Send message</TooltipContent>
-                </Tooltip>
-              </div>
+              <>
+                <div className="flex items-center space-x-2">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="rounded-full hover:bg-black/5 dark:hover:bg-white/5"
+                      >
+                        <Plus className="h-5 w-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">Attachments</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="rounded-full hover:bg-black/5 dark:hover:bg-white/5"
+                      >
+                        <Globe className="h-5 w-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">Web Search</TooltipContent>
+                  </Tooltip>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="rounded-full hover:bg-black/5 dark:hover:bg-white/5"
+                      >
+                        <Mic className="h-5 w-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">Voice input</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="submit"
+                        size="icon"
+                        className="bg-foreground text-background rounded-full shadow-lg hover:bg-foreground/90"
+                        disabled={isSendingMessage || !input.trim()}
+                      >
+                        <ArrowUp className="h-5 w-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">Send message</TooltipContent>
+                  </Tooltip>
+                </div>
+              </>
             )}
           </div>
         </div>

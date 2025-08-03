@@ -198,8 +198,9 @@ export function ChatMessage({ message, onSendMessage, isPublic = false }: ChatMe
             ) : (
               <Card
                 className={cn(
-                  "rounded-2xl p-4 w-fit",
-                  "bg-secondary text-secondary-foreground rounded-br-none border-0"
+                  "rounded-2xl p-4 w-fit min-w-[60px]",
+                  "bg-secondary text-secondary-foreground rounded-br-none border-0",
+                  "ml-auto" // Add ml-auto to ensure it aligns to the right
                 )}
               >
                 <CardContent className="p-0 text-sm">
@@ -216,8 +217,11 @@ export function ChatMessage({ message, onSendMessage, isPublic = false }: ChatMe
                 </CardContent>
               </Card>
             )}
-            {!message.isGenerating && (
-              <div className="flex items-center gap-1 mt-2">
+            {!message.isGenerating && !isEditing && (
+              <div className={cn(
+                "flex items-center gap-1 mt-2",
+                !isAssistant && "justify-end" // Add justify-end for user messages
+              )}>
                 {isAssistant && (
                   <Tooltip>
                     <TooltipTrigger asChild>
