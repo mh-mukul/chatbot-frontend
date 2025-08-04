@@ -204,3 +204,19 @@ export async function resubmitChat(chatId: number, sessionId: string, query: str
     }),
   });
 }
+
+export async function searchChats(query: string) {
+  return apiClient<{
+    status: number;
+    message: string;
+    data: Array<{
+      session_id: string;
+      title: string;
+      user_id: number;
+      date_time: string;
+      shared_to_public: boolean;
+    }>;
+  }>(`/api/v1/chat/search?query=${encodeURIComponent(query)}`, {
+    method: 'GET',
+  });
+}
