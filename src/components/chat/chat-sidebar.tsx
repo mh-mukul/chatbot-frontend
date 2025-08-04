@@ -2,6 +2,7 @@
 
 import { MoreHorizontal, Trash, Bot, SquarePen, Search, LogOut, Settings } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import SearchModal from './SearchModal';
 import {
   SidebarHeader,
   SidebarContent,
@@ -49,6 +50,7 @@ export function ChatSidebar({
   const [user, setUser] = useState<LoginResponse['data']['user'] | null>(null);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -80,7 +82,7 @@ export function ChatSidebar({
           <Button
             variant="ghost"
             className="w-full justify-start group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:p-0"
-            onClick={onCreateNewChat}
+            onClick={() => setIsSearchModalOpen(true)}
           >
             <Search size={16} />
             <span className="group-data-[collapsible=icon]:hidden">Search Chats</span>
@@ -175,6 +177,10 @@ export function ChatSidebar({
         onClose={() => setIsLogoutModalOpen(false)}
         onConfirm={onLogout}
         userEmail={user?.email || null}
+      />
+      <SearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
       />
     </>
   );
