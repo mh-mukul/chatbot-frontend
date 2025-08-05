@@ -5,12 +5,12 @@ import type { Message } from "./types";
 import { Avatar } from "@/components/ui/avatar";
 import { Loader2, Bot, Copy, ThumbsUp, ThumbsDown, RefreshCw, Pen } from "lucide-react";
 import { Card, CardContent } from "../ui/card";
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "../ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { sendPositiveFeedback, sendNegativeFeedback } from "@/api/chat";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
-import { ChatInput } from "./chat-input"; // Import ChatInput
+import { ChatInput } from "./chat-input";
 
 interface ChatMessageProps {
   message: Message;
@@ -21,7 +21,7 @@ interface ChatMessageProps {
 export function ChatMessage({ message, onSendMessage, isPublic = false }: ChatMessageProps) {
   const isAssistant = message.role === "assistant";
   const [isHovered, setIsHovered] = useState(false);
-  const [isEditing, setIsEditing] = useState(false); // New state for editing mode
+  const [isEditing, setIsEditing] = useState(false);
   const { toast } = useToast();
 
   const formatDuration = (duration: number) => {
@@ -185,7 +185,7 @@ export function ChatMessage({ message, onSendMessage, isPublic = false }: ChatMe
               />
             ) : isAssistant ? (
               <div className="text-sm pt-2">
-                {message.isGenerating ? (
+                {message.isGenerating && !message.content ? (
                   <div className="flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     <span>Thinking...</span>
@@ -193,6 +193,9 @@ export function ChatMessage({ message, onSendMessage, isPublic = false }: ChatMe
                 ) : (
                   <p className="whitespace-pre-wrap break-words">
                     {message.content}
+                    {message.isGenerating && (
+                      <span className="inline-block w-2 h-4 ml-1 animate-pulse bg-foreground" />
+                    )}
                   </p>
                 )}
               </div>

@@ -3,6 +3,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import type { Conversation, Message, Chat, Pagination } from '@/components/chat/types';
 import { useToast } from '@/hooks/use-toast';
 import { fetchChatHistory, fetchChatMessages, sendMessage, deleteChat, getChatTitle, resubmitChat } from '@/api/chat';
+import { StreamingResponse } from '@/lib/sse-client';
 import { logout } from '@/api/auth';
 import { clearTokens, getRefreshToken, redirectToLogin } from '@/lib/auth-utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -270,26 +271,14 @@ export function useChatManagement() {
   const handleSendMessage = useCallback(async (input: string, originalMsgId?: number) => {
     if (!isAuthenticated || isSendingMessage) return;
 
-    // Only use session ID if we're continuing an existing conversation
     let newSessionId = currentSessionId;
-
-    // Find the index of the original message if resubmitting
     let originalMessageIndex = -1;
     let originalUserQuery = input;
 
     if (originalMsgId) {
-      // First check if this is an AI message being resubmitted
-      const aiMessage = activeChatMessages.find(msg =>
-        msg.role === 'assistant' && msg.originalId === originalMsgId
-      );
-
-      // If it's an AI message, we need to find the corresponding user message
+      const aiMessage = activeChatMessages.find(msg => msg.role === 'assistant' && msg.originalId === originalMsgId);
       if (aiMessage) {
-        // Find the user message that came before this AI message
-        const aiMessageIndex = activeChatMessages.findIndex(msg =>
-          msg.role === 'assistant' && msg.originalId === originalMsgId
-        );
-
+        const aiMessageIndex = activeChatMessages.findIndex(msg => msg.role === 'assistant' && msg.originalId === originalMsgId);
         if (aiMessageIndex > 0) {
           const userMessage = activeChatMessages[aiMessageIndex - 1];
           if (userMessage && userMessage.role === 'user') {
@@ -298,31 +287,23 @@ export function useChatManagement() {
           }
         }
       } else {
-        // Check if it's a user message being resubmitted
-        originalMessageIndex = activeChatMessages.findIndex(msg =>
-          msg.role === 'user' && msg.originalId === originalMsgId
-        );
+        originalMessageIndex = activeChatMessages.findIndex(msg => msg.role === 'user' && msg.originalId === originalMsgId);
       }
     }
 
-    // Create user message
     const userMessage: Message = {
       id: Date.now().toString() + '-user',
       role: 'user',
-      content: originalUserQuery, // Use the original user query if resubmitting
+      content: originalUserQuery,
       createdAt: Date.now(),
       originalId: originalMsgId ? originalMsgId : undefined
     };
 
-    // For new sessions, set a temporary active conversation ID immediately 
-    // to trigger UI update from welcome screen to chat thread
     if (!activeConversationId && !originalMsgId) {
       const tempId = `temp-${Date.now()}`;
-      // We'll update this with the real session ID after receiving the response
       setActiveConversationId(tempId);
     }
 
-    // Create assistant placeholder
     const assistantPlaceholder: Message = {
       id: Date.now().toString() + '-assistant-placeholder',
       role: 'assistant',
@@ -331,66 +312,82 @@ export function useChatManagement() {
       createdAt: Date.now(),
     };
 
-    // If resubmitting, keep messages up to the user message and remove the rest
     if (originalMessageIndex !== -1) {
       setActiveChatMessages(prevMessages => {
-        // Keep messages up to and including the user message being resubmitted
-        const userMessageToKeep = prevMessages[originalMessageIndex];
         const messagesToKeep = prevMessages.slice(0, originalMessageIndex + 1);
-        // Add the assistant placeholder
         return [...messagesToKeep, assistantPlaceholder];
       });
     } else {
-      // Normal message flow
       setActiveChatMessages(prevMessages => [...prevMessages, userMessage, assistantPlaceholder]);
     }
 
     setIsSendingMessage(true);
 
     try {
-      let response;
+      const stream = true;
+      let responseStream: AsyncGenerator<StreamingResponse, void, unknown>;
 
-      // If originalMsgId is provided, use resubmitChat API
       if (originalMsgId && newSessionId) {
-        response = await resubmitChat(originalMsgId, newSessionId, originalUserQuery);
+        responseStream = await resubmitChat(originalMsgId, newSessionId, originalUserQuery, stream);
       } else {
-        // For existing sessions, send the session ID
-        // For new sessions, only send the query (session ID will be returned by API)
-        response = await sendMessage(input, currentSessionId || undefined);
+        responseStream = await sendMessage(input, currentSessionId || undefined, stream);
       }
 
-      if (response.status === 200 && response.data) {
-        // Get the session ID from the API response
-        const sessionIdFromResponse = response.data.session_id;
-        const assistantResponseContent = response.data.ai_message;
-        const assistantResponseDuration = response.data.duration;
-        const messageId = response.data.id;
+      let finalResponse: any = null;
+      let accumulatedContent = '';
 
-        // Always update the current session ID with the one from the response
+      for await (const { done, text, fullResponse } of responseStream) {
+        if (done) {
+          finalResponse = fullResponse;
+          break;
+        }
+
+        if (text) {
+          accumulatedContent += text;
+          setActiveChatMessages(prevMessages =>
+            prevMessages.map(msg =>
+              msg.id === assistantPlaceholder.id
+                ? { ...msg, content: accumulatedContent }
+                : msg
+            )
+          );
+        }
+      }
+
+      if (finalResponse && finalResponse.status === 200) {
+        const { data } = finalResponse;
+        const sessionIdFromResponse = data.session_id;
+        const assistantResponseContent = data.ai_message;
+        const assistantResponseDuration = data.duration;
+        const messageId = data.id;
+
         setCurrentSessionId(sessionIdFromResponse);
 
-        setActiveChatMessages(prevMessages => prevMessages.map(msg =>
-          msg.id === assistantPlaceholder.id
-            ? {
-              ...msg,
-              content: assistantResponseContent,
-              isGenerating: false,
-              createdAt: Date.now(),
-              duration: assistantResponseDuration,
-              originalId: messageId
-            }
-            : msg
-        ));
+        setActiveChatMessages(prevMessages =>
+          prevMessages.map(msg =>
+            msg.id === assistantPlaceholder.id
+              ? {
+                ...msg,
+                content: assistantResponseContent,
+                isGenerating: false,
+                createdAt: new Date(data.date_time).getTime() + 1,
+                duration: assistantResponseDuration,
+                originalId: messageId,
+                positiveFeedback: data.positive_feedback,
+                negativeFeedback: data.negative_feedback,
+              }
+              : msg
+          )
+        );
 
-        // Only update conversations list if we're not resubmitting
         if (!originalMsgId) {
           setConversations(prevConversations => {
             const existingConversationIndex = prevConversations.findIndex(conv => conv.id === newSessionId);
             const newAssistantMessage: Message = {
-              id: Date.now().toString() + '-assistant',
+              id: `${messageId}-ai`,
               role: 'assistant',
               content: assistantResponseContent,
-              createdAt: Date.now(),
+              createdAt: new Date(data.date_time).getTime() + 1,
               duration: assistantResponseDuration,
               originalId: messageId,
             };
@@ -416,12 +413,9 @@ export function useChatManagement() {
             }
           });
 
-          // For new conversations, update the active conversation ID with the one from the server
-          // and update the URL
-          if (!activeConversationId) {
+          if (!activeConversationId || activeConversationId.startsWith('temp-')) {
             setActiveConversationId(sessionIdFromResponse);
             router.push(`/chat/${sessionIdFromResponse}`);
-          } if (!activeConversationId) {
             try {
               const titleResponse = await getChatTitle(input, sessionIdFromResponse);
               if (titleResponse.status === 200 && titleResponse.data) {
@@ -443,7 +437,7 @@ export function useChatManagement() {
         toast({
           variant: "destructive",
           title: "API Error",
-          description: response.message || "Failed to get chat response.",
+          description: finalResponse?.message || "Failed to get chat response.",
         });
         setActiveChatMessages(prevMessages => prevMessages.filter(msg => msg.id !== assistantPlaceholder.id));
       }
@@ -454,7 +448,7 @@ export function useChatManagement() {
         title: "Network Error",
         description: "Could not connect to the backend or an unexpected error occurred.",
       });
-      setActiveChatMessages(prevMessages => prevMessages.filter(msg => msg.id !== assistantPlaceholder.id));
+      setActiveChatMessages(prevMessages => prevMessages.filter(msg => msg.id !== assistantPlaceholder.id && msg.id !== userMessage.id));
     } finally {
       setIsSendingMessage(false);
     }
