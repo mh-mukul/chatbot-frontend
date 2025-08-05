@@ -46,14 +46,17 @@ export function ChatInput({
     }
   }, [input]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isSendingMessage) return;
 
-    onSendMessage(input);
-    if (!isEditing) { // Only clear input if not in editing mode
+    const message = input;
+    if (!isEditing) { // Clear input immediately to improve user experience
       setInput('');
     }
+
+    // Send message after UI update
+    await onSendMessage(message);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

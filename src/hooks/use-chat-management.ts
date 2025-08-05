@@ -270,15 +270,8 @@ export function useChatManagement() {
   const handleSendMessage = useCallback(async (input: string, originalMsgId?: number) => {
     if (!isAuthenticated || isSendingMessage) return;
 
+    // Only use session ID if we're continuing an existing conversation
     let newSessionId = currentSessionId;
-    if (!newSessionId) {
-      newSessionId = Date.now().toString();
-      setCurrentSessionId(newSessionId);
-    }
-
-    if (!activeConversationId) {
-      setActiveConversationId(newSessionId);
-    }
 
     // Find the index of the original message if resubmitting
     let originalMessageIndex = -1;
@@ -321,6 +314,14 @@ export function useChatManagement() {
       originalId: originalMsgId ? originalMsgId : undefined
     };
 
+    // For new sessions, set a temporary active conversation ID immediately 
+    // to trigger UI update from welcome screen to chat thread
+    if (!activeConversationId && !originalMsgId) {
+      const tempId = `temp-${Date.now()}`;
+      // We'll update this with the real session ID after receiving the response
+      setActiveConversationId(tempId);
+    }
+
     // Create assistant placeholder
     const assistantPlaceholder: Message = {
       id: Date.now().toString() + '-assistant-placeholder',
@@ -353,16 +354,20 @@ export function useChatManagement() {
       if (originalMsgId && newSessionId) {
         response = await resubmitChat(originalMsgId, newSessionId, originalUserQuery);
       } else {
-        response = await sendMessage(input, newSessionId || undefined);
+        // For existing sessions, send the session ID
+        // For new sessions, only send the query (session ID will be returned by API)
+        response = await sendMessage(input, currentSessionId || undefined);
       }
 
       if (response.status === 200 && response.data) {
-        const newSessionId = response.data.session_id;
+        // Get the session ID from the API response
+        const sessionIdFromResponse = response.data.session_id;
         const assistantResponseContent = response.data.ai_message;
         const assistantResponseDuration = response.data.duration;
         const messageId = response.data.id;
 
-        setCurrentSessionId(newSessionId);
+        // Always update the current session ID with the one from the response
+        setCurrentSessionId(sessionIdFromResponse);
 
         setActiveChatMessages(prevMessages => prevMessages.map(msg =>
           msg.id === assistantPlaceholder.id
@@ -392,7 +397,7 @@ export function useChatManagement() {
 
             if (existingConversationIndex > -1) {
               const updatedConversations = [...prevConversations];
-              const updatedIndex = updatedConversations.findIndex(conv => conv.id === newSessionId);
+              const updatedIndex = updatedConversations.findIndex(conv => conv.id === sessionIdFromResponse);
               if (updatedIndex > -1) {
                 const [updatedConversation] = updatedConversations.splice(updatedIndex, 1);
                 updatedConversation.messages.push(userMessage, newAssistantMessage);
@@ -402,7 +407,7 @@ export function useChatManagement() {
               return updatedConversations;
             } else {
               const newConversation: Conversation = {
-                id: newSessionId,
+                id: sessionIdFromResponse,
                 title: 'New Chat',
                 messages: [userMessage, newAssistantMessage],
                 date_time: new Date().toISOString(),
@@ -411,18 +416,18 @@ export function useChatManagement() {
             }
           });
 
+          // For new conversations, update the active conversation ID with the one from the server
+          // and update the URL
           if (!activeConversationId) {
-            setActiveConversationId(newSessionId);
-            router.push(`/chat/${newSessionId}`);
-          }
-
-          if (!activeConversationId) {
+            setActiveConversationId(sessionIdFromResponse);
+            router.push(`/chat/${sessionIdFromResponse}`);
+          } if (!activeConversationId) {
             try {
-              const titleResponse = await getChatTitle(input, newSessionId);
+              const titleResponse = await getChatTitle(input, sessionIdFromResponse);
               if (titleResponse.status === 200 && titleResponse.data) {
                 setConversations(prevConversations => {
                   const updatedConversations = [...prevConversations];
-                  const conversationIndex = updatedConversations.findIndex(conv => conv.id === newSessionId);
+                  const conversationIndex = updatedConversations.findIndex(conv => conv.id === sessionIdFromResponse);
                   if (conversationIndex > -1) {
                     updatedConversations[conversationIndex].title = titleResponse.data.title;
                   }

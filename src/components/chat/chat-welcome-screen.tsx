@@ -1,5 +1,6 @@
 import { ChatInput } from './chat-input';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useState } from 'react';
 
 interface ChatWelcomeScreenProps {
   onSendMessage: (input: string) => Promise<void>;
@@ -8,6 +9,13 @@ interface ChatWelcomeScreenProps {
 
 export function ChatWelcomeScreen({ onSendMessage, isSendingMessage }: ChatWelcomeScreenProps) {
   const isMobile = useIsMobile();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Wrap the onSendMessage to immediately update the UI
+  const handleSendMessage = async (input: string) => {
+    setIsSubmitting(true); // This will force a re-render and the parent component will switch to ChatThread
+    await onSendMessage(input);
+  };
 
   return (
     <>
@@ -20,14 +28,14 @@ export function ChatWelcomeScreen({ onSendMessage, isSendingMessage }: ChatWelco
           </div>
           {!isMobile && (
             <div className="max-w-[70%] w-full p-4">
-              <ChatInput onSendMessage={onSendMessage} isSendingMessage={isSendingMessage} />
+              <ChatInput onSendMessage={handleSendMessage} isSendingMessage={isSendingMessage} />
             </div>
           )}
         </div>
       </div>
       {isMobile && (
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-sm z-10">
-          <ChatInput onSendMessage={onSendMessage} isSendingMessage={isSendingMessage} />
+          <ChatInput onSendMessage={handleSendMessage} isSendingMessage={isSendingMessage} />
         </div>
       )}
     </>

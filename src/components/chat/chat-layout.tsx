@@ -103,9 +103,13 @@ export function ChatLayout() {
             <Loader2 className="h-8 w-8 animate-spin" />
           </div>
         ) : (
-          activeConversationId ? (
+          activeConversationId || activeChatMessages.length > 0 ? (
             <ChatThread
-              conversation={{ id: activeConversationId, title: activeConversation?.title || 'Chat', messages: activeChatMessages }}
+              conversation={{
+                id: activeConversationId || 'temp-id',
+                title: activeConversation?.title || 'Chat',
+                messages: activeChatMessages
+              }}
               onSendMessage={handleSendMessage}
               isSendingMessage={isSendingMessage}
             />
