@@ -249,7 +249,7 @@ export function ChatMessage({ message, onSendMessage, isPublic = false }: ChatMe
                     <span>Thinking...</span>
                   </div>
                 ) : (
-                  <div className="whitespace-pre-wrap break-words prose dark:prose-invert max-w-none w-full overflow-hidden prose-p:my-1.5 prose-headings:my-2 prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0.5 prose-li:marker:text-foreground/70 prose-pre:my-1.5 prose-pre:bg-secondary prose-pre:text-secondary-foreground prose-code:text-secondary-foreground prose-code:bg-secondary prose-code:rounded prose-code:px-1 prose-code:py-0.5 prose-headings:text-foreground prose-a:text-primary prose-img:rounded-md prose-img:max-w-full prose-blockquote:my-2 prose-blockquote:pl-4 prose-blockquote:text-muted-foreground prose-blockquote:border-l-2 prose-blockquote:border-primary/40">
+                  <div className="prose dark:prose-invert max-w-none w-full overflow-hidden prose-headings:my-2 prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0.5 prose-li:marker:text-foreground/70 prose-pre:my-1.5 prose-pre:bg-secondary prose-pre:text-secondary-foreground prose-code:text-secondary-foreground prose-code:bg-secondary prose-code:rounded prose-code:px-1 prose-code:py-0.5 prose-headings:text-foreground prose-a:text-primary prose-img:rounded-md prose-img:max-w-full prose-blockquote:my-2 prose-blockquote:pl-4 prose-blockquote:text-muted-foreground prose-blockquote:border-l-2 prose-blockquote:border-primary/40">
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
                       components={{
