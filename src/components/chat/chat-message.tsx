@@ -11,12 +11,68 @@ import { useToast } from "@/hooks/use-toast";
 import { sendPositiveFeedback, sendNegativeFeedback } from "@/api/chat";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 import { ChatInput } from "./chat-input";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { CopyIcon, CheckIcon } from "lucide-react";
 
 interface ChatMessageProps {
   message: Message;
   onSendMessage: (input: string, originalMsgId?: number) => Promise<void>;
   isPublic?: boolean;
 }
+
+// Custom component for code blocks
+const CodeBlock = ({ className, children }: { className?: string; children: React.ReactNode }) => {
+  const [copied, setCopied] = useState(false);
+  const codeString = String(children);
+  const language = className ? className.replace('language-', '') : '';
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(codeString);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="relative my-2 group">
+      <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-6 w-6 bg-secondary/80 backdrop-blur-sm"
+          onClick={handleCopy}
+        >
+          {copied ? <CheckIcon className="h-3 w-3" /> : <CopyIcon className="h-3 w-3" />}
+        </Button>
+      </div>
+      {language && (
+        <div className="absolute left-2 top-2 text-xs text-muted-foreground px-2 py-1 rounded-t-md bg-secondary/40">
+          {language}
+        </div>
+      )}
+      <pre
+        className={`rounded-md p-3 pt-8 bg-secondary text-secondary-foreground text-sm`}
+        style={{
+          maxWidth: '100%',
+          overflowX: 'auto',
+          whiteSpace: 'pre-wrap',
+          wordWrap: 'break-word'
+        }}
+      >
+        <code
+          className={`${language} text-xs sm:text-sm`}
+          style={{
+            wordBreak: 'break-word',
+            whiteSpace: 'pre-wrap',
+            overflowWrap: 'break-word'
+          }}
+        >
+          {children}
+        </code>
+      </pre>
+    </div>
+  );
+};
 
 export function ChatMessage({ message, onSendMessage, isPublic = false }: ChatMessageProps) {
   const isAssistant = message.role === "assistant";
@@ -146,8 +202,10 @@ export function ChatMessage({ message, onSendMessage, isPublic = false }: ChatMe
 
         <div
           className={cn(
-            "flex flex-col gap-2",
-            isEditing ? "w-full" : "max-w-[80%]",
+            "flex flex-col gap-1",
+            isEditing && "w-full",
+            !isEditing && isAssistant && "w-full sm:max-w-[90%] md:max-w-[85%]",
+            !isEditing && !isAssistant && "max-w-[85%] sm:max-w-[80%]",
             isAssistant ? "items-start" : (isEditing ? "" : "items-end")
           )}
         >
@@ -184,19 +242,73 @@ export function ChatMessage({ message, onSendMessage, isPublic = false }: ChatMe
                 isEditing={true}
               />
             ) : isAssistant ? (
-              <div className="text-sm pt-2">
+              <div className="text-sm pt-1 w-full overflow-hidden">
                 {message.isGenerating && !message.content ? (
                   <div className="flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     <span>Thinking...</span>
                   </div>
                 ) : (
-                  <p className="whitespace-pre-wrap break-words">
-                    {message.content}
+                  <div className="whitespace-pre-wrap break-words prose dark:prose-invert max-w-none w-full overflow-hidden prose-p:my-1.5 prose-headings:my-2 prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0.5 prose-li:marker:text-foreground/70 prose-pre:my-1.5 prose-pre:bg-secondary prose-pre:text-secondary-foreground prose-code:text-secondary-foreground prose-code:bg-secondary prose-code:rounded prose-code:px-1 prose-code:py-0.5 prose-headings:text-foreground prose-a:text-primary prose-img:rounded-md prose-img:max-w-full prose-blockquote:my-2 prose-blockquote:pl-4 prose-blockquote:text-muted-foreground prose-blockquote:border-l-2 prose-blockquote:border-primary/40">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        pre: ({ children }) => <div className="w-full overflow-hidden">{children}</div>,
+                        code: ({ className, children }) => {
+                          const match = /language-(\w+)/.exec(className || '');
+                          return match ? (
+                            <CodeBlock className={className}>
+                              {String(children).replace(/\n$/, '')}
+                            </CodeBlock>
+                          ) : (
+                            <code className="bg-secondary/70 px-1 py-0.5 rounded text-secondary-foreground text-xs sm:text-sm">
+                              {children}
+                            </code>
+                          );
+                        },
+                        a: ({ href, children }) => {
+                          // Check if the href is a valid URL
+                          let url;
+                          try {
+                            url = new URL(href || '');
+                          } catch (e) {
+                            return <span className="text-primary">{children}</span>;
+                          }
+
+                          return (
+                            <a
+                              href={href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary underline underline-offset-2 hover:text-primary/80"
+                            >
+                              {children}
+                            </a>
+                          );
+                        },
+                        li: ({ children }) => (
+                          <li className="my-0.5">{children}</li>
+                        ),
+                        h1: ({ children }) => (
+                          <h1 className="text-xl font-bold mt-2 mb-1">{children}</h1>
+                        ),
+                        h2: ({ children }) => (
+                          <h2 className="text-lg font-bold mt-2 mb-1">{children}</h2>
+                        ),
+                        h3: ({ children }) => (
+                          <h3 className="text-base font-bold mt-1.5 mb-0.5">{children}</h3>
+                        ),
+                        p: ({ children }) => (
+                          <p className="my-1.5">{children}</p>
+                        )
+                      }}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
                     {message.isGenerating && (
                       <span className="inline-block w-2 h-4 ml-1 animate-pulse bg-foreground" />
                     )}
-                  </p>
+                  </div>
                 )}
               </div>
             ) : (
@@ -214,9 +326,9 @@ export function ChatMessage({ message, onSendMessage, isPublic = false }: ChatMe
                       <span>Thinking...</span>
                     </div>
                   ) : (
-                    <p className="whitespace-pre-wrap break-words">
+                    <div className="whitespace-pre-wrap break-words">
                       {message.content}
-                    </p>
+                    </div>
                   )}
                 </CardContent>
               </Card>
