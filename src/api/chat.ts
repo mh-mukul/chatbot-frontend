@@ -1,5 +1,6 @@
 import { publicApiClient } from '@/lib/public-api-client';
 import { apiClient } from '@/lib/api-client';
+import { createEventSourceStream } from '@/lib/sse-client';
 import { Chat, ChatHistory } from '@/components/chat/types';
 
 interface SendMessageResponseData {
@@ -81,25 +82,68 @@ export async function fetchChatMessages(sessionId: string) {
   return response;
 }
 
-export async function sendMessage(query: string, sessionId?: string) {
-  // Invalidate cache for the session and history when sending a new message
+export async function sendMessage(
+  query: string,
+  sessionId?: string,
+  stream: boolean = false
+): Promise<any> {
   if (sessionId) {
     delete chatCache.chatMessages[sessionId];
   }
   chatCache.chatHistory = undefined;
 
-  const requestBody: { query: string; session_id?: string } = {
+  const requestBody: { query: string; session_id?: string; stream?: boolean } = {
     query: query,
+    stream: stream,
   };
 
   if (sessionId) {
     requestBody.session_id = sessionId;
   }
 
-  return apiClient<SendMessageResponseData>(`/api/v1/chat`, {
-    method: 'POST',
-    body: JSON.stringify(requestBody),
-  });
+  if (stream) {
+    return createEventSourceStream(
+      `/api/v1/chat`,
+      {
+        method: 'POST',
+        body: JSON.stringify(requestBody),
+      }
+    );
+  } else {
+    return apiClient<SendMessageResponseData>(`/api/v1/chat`, {
+      method: 'POST',
+      body: JSON.stringify(requestBody),
+    });
+  }
+}
+
+export async function resubmitChat(
+  chatId: number,
+  sessionId: string,
+  query: string,
+  stream: boolean = false
+): Promise<any> {
+  delete chatCache.chatMessages[sessionId];
+  chatCache.chatHistory = undefined;
+
+  const requestBody = {
+    chat_id: chatId,
+    session_id: sessionId,
+    query: query,
+    stream: stream,
+  };
+
+  if (stream) {
+    return createEventSourceStream(`/api/v1/chat/resubmit`, {
+      method: 'POST',
+      body: JSON.stringify(requestBody),
+    });
+  } else {
+    return apiClient<SendMessageResponseData>(`/api/v1/chat/resubmit`, {
+      method: 'POST',
+      body: JSON.stringify(requestBody),
+    });
+  }
 }
 
 export async function shareChat(sessionId: string) {
@@ -186,21 +230,6 @@ export async function sendNegativeFeedback(messageId: number) {
       id: messageId,
       positive_feedback: false,
       negative_feedback: true,
-    }),
-  });
-}
-
-export async function resubmitChat(chatId: number, sessionId: string, query: string) {
-  // Invalidate cache for the session and history when resubmitting a message
-  delete chatCache.chatMessages[sessionId];
-  chatCache.chatHistory = undefined;
-
-  return apiClient<SendMessageResponseData>(`/api/v1/chat/resubmit`, {
-    method: 'POST',
-    body: JSON.stringify({
-      chat_id: chatId,
-      session_id: sessionId,
-      query: query
     }),
   });
 }

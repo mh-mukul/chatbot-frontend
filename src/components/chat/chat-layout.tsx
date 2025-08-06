@@ -105,11 +105,7 @@ export function ChatLayout() {
         ) : (
           activeConversationId || activeChatMessages.length > 0 ? (
             <ChatThread
-              conversation={{
-                id: activeConversationId || 'temp-id',
-                title: activeConversation?.title || 'Chat',
-                messages: activeChatMessages
-              }}
+              messages={activeChatMessages}
               onSendMessage={handleSendMessage}
               isSendingMessage={isSendingMessage}
             />
