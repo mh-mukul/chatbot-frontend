@@ -135,7 +135,8 @@ const SearchModal: FC<SearchModalProps> = ({ isOpen, onClose }) => {
   }, [searchTimeout, toast]);
 
   const handleChatClick = (sessionId: string) => {
-    router.push(`/chat/${sessionId}`);
+    const chatUrl = `/chat/${sessionId}`;
+    window.location.href = chatUrl;
     onClose();
   };
 
