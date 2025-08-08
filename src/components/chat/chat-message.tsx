@@ -5,7 +5,7 @@ import type { Message } from "./types";
 import { Avatar } from "@/components/ui/avatar";
 import { Loader2, Bot, Copy, ThumbsUp, ThumbsDown, RefreshCw, Pen } from "lucide-react";
 import { Card, CardContent } from "../ui/card";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { sendPositiveFeedback, sendNegativeFeedback } from "@/api/chat";
@@ -13,7 +13,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/
 import { ChatInput } from "./chat-input";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { CopyIcon, CheckIcon } from "lucide-react";
+import { useTheme } from "next-themes";
 
 interface ChatMessageProps {
   message: Message;
@@ -23,9 +26,16 @@ interface ChatMessageProps {
 
 // Custom component for code blocks
 const CodeBlock = ({ className, children }: { className?: string; children: React.ReactNode }) => {
+  const { theme } = useTheme();
   const [copied, setCopied] = useState(false);
-  const codeString = String(children);
+  const [activeStyle, setActiveStyle] = useState(vscDarkPlus);
+  const codeString = String(children).replace(/\n$/, '');
   const language = className ? className.replace('language-', '') : '';
+
+  useEffect(() => {
+    const isDarkMode = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    setActiveStyle(isDarkMode ? vscDarkPlus : vs);
+  }, [theme]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(codeString);
@@ -50,26 +60,36 @@ const CodeBlock = ({ className, children }: { className?: string; children: Reac
           {language}
         </div>
       )}
-      <pre
-        className={`rounded-md p-3 pt-8 bg-secondary text-secondary-foreground text-sm`}
-        style={{
+      <SyntaxHighlighter
+        style={activeStyle}
+        language={language}
+        PreTag="div"
+        wrapLongLines={true}
+        customStyle={{
+          borderRadius: '0.375rem',
+          padding: '0.75rem',
+          paddingTop: '2rem',
+          fontSize: '0.875rem',
+          lineHeight: '1.25rem',
           maxWidth: '100%',
           overflowX: 'auto',
           whiteSpace: 'pre-wrap',
-          wordWrap: 'break-word'
+          width: '100%',
+          overflowWrap: 'anywhere', // Updated from break-word to anywhere for better handling of long strings
+          wordBreak: 'break-word'
+        }}
+        codeTagProps={{
+          style: {
+            whiteSpace: 'pre-wrap',
+            overflowWrap: 'anywhere', // Updated from break-word to anywhere
+            wordBreak: 'break-word',
+            fontFamily: 'inherit',
+            background: 'transparent'
+          }
         }}
       >
-        <code
-          className={`${language} text-xs sm:text-sm`}
-          style={{
-            wordBreak: 'break-word',
-            whiteSpace: 'pre-wrap',
-            overflowWrap: 'break-word'
-          }}
-        >
-          {children}
-        </code>
-      </pre>
+        {codeString}
+      </SyntaxHighlighter>
     </div>
   );
 };
@@ -249,7 +269,7 @@ export function ChatMessage({ message, onSendMessage, isPublic = false }: ChatMe
                     <span>Thinking...</span>
                   </div>
                 ) : (
-                  <div className="prose dark:prose-invert max-w-none w-full overflow-hidden prose-headings:my-2 prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0.5 prose-li:marker:text-foreground/70 prose-pre:my-1.5 prose-pre:bg-secondary prose-pre:text-secondary-foreground prose-code:text-secondary-foreground prose-code:bg-secondary prose-code:rounded prose-code:px-1 prose-code:py-0.5 prose-headings:text-foreground prose-a:text-primary prose-img:rounded-md prose-img:max-w-full prose-blockquote:my-2 prose-blockquote:pl-4 prose-blockquote:text-muted-foreground prose-blockquote:border-l-2 prose-blockquote:border-primary/40">
+                  <div className="prose dark:prose-invert max-w-none w-full overflow-hidden prose-headings:my-2 prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0.5 prose-li:marker:text-foreground/70 prose-pre:my-1.5 prose-pre:bg-secondary prose-pre:text-secondary-foreground prose-code:text-secondary-foreground prose-code:bg-secondary prose-code:rounded prose-code:px-1 prose-code:py-0.5 prose-headings:text-foreground prose-a:text-primary prose-img:rounded-md prose-img:max-w-full prose-blockquote:my-2 prose-blockquote:pl-4 prose-blockquote:text-muted-foreground prose-blockquote:border-l-2 prose-blockquote:border-primary/40 break-words">
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
                       components={{
@@ -261,7 +281,7 @@ export function ChatMessage({ message, onSendMessage, isPublic = false }: ChatMe
                               {String(children).replace(/\n$/, '')}
                             </CodeBlock>
                           ) : (
-                            <code className="bg-secondary/70 px-1 py-0.5 rounded text-secondary-foreground text-xs sm:text-sm">
+                            <code className="bg-secondary/70 px-1 py-0.5 rounded text-secondary-foreground text-xs sm:text-sm" style={{ overflowWrap: 'anywhere' }}>
                               {children}
                             </code>
                           );
@@ -299,7 +319,7 @@ export function ChatMessage({ message, onSendMessage, isPublic = false }: ChatMe
                           <h3 className="text-base font-bold mt-1.5 mb-0.5">{children}</h3>
                         ),
                         p: ({ children }) => (
-                          <p className="my-1.5">{children}</p>
+                          <p className="my-1.5 break-words" style={{ overflowWrap: 'anywhere' }}>{children}</p>
                         )
                       }}
                     >
