@@ -61,6 +61,7 @@ export function ChatLayout() {
           onScroll={handleScroll}
           onDeleteChat={handleDeleteChat}
           onLogout={handleLogout}
+          showGradient={!activeConversationId && activeChatMessages.length === 0}
         />
       </Sidebar>
       <SidebarInset className={`pt-16 ${isMobile && !activeConversationId ? 'pb-24' : ''}`}>

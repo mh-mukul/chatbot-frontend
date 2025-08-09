@@ -33,6 +33,7 @@ interface ChatSidebarProps {
   onScroll: (event: React.UIEvent<HTMLDivElement>) => void;
   onDeleteChat: (id: string) => void;
   onLogout: () => void;
+  showGradient?: boolean;
 }
 
 export function ChatSidebar({
@@ -43,6 +44,7 @@ export function ChatSidebar({
   onScroll,
   onDeleteChat,
   onLogout,
+  showGradient = false,
 }: ChatSidebarProps) {
   const [hoveredChatId, setHoveredChatId] = useState<string | null>(null);
   const { state } = useSidebar();
@@ -62,13 +64,18 @@ export function ChatSidebar({
 
   return (
     <>
-      <SidebarHeader className="h-14 flex flex-row items-center justify-between p-2 group-data-[collapsible=icon]:justify-center">
+      {showGradient && (
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-green-500 to-red-400 opacity-40 blur-3xl"></div>
+        </div>
+      )}
+      <SidebarHeader className="h-14 flex flex-row items-center justify-between p-2 group-data-[collapsible=icon]:justify-center relative z-10">
         <div className="flex items-center p-2 group-data-[collapsible=icon]:hidden">
           <Bot size={24} className="text-primary" />
         </div>
         <SidebarTrigger />
       </SidebarHeader>
-      <SidebarContent onScroll={onScroll}>
+      <SidebarContent onScroll={onScroll} className="relative z-10">
         <div className='p-2'>
           <Button
             variant="ghost"
@@ -135,7 +142,7 @@ export function ChatSidebar({
           </SidebarMenu>
         )}
       </SidebarContent>
-      <div className="flex items-center justify-start w-full p-2">
+      <div className="flex items-center justify-start w-full p-2 relative z-10">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
